@@ -400,6 +400,7 @@ const REPS = [
 // ══ DATA STORES ══
 let salesRows=[], crmRows=[], goals={}, crmGoals={};
 let gpTarget=40, qtcTarget=35, newBizPctGoal=30, existingPctGoal=70;
+let gpTargets={}, qtcTargets={};  // per-rep: {repIdx: value}
 let hasLiveData=false, page='company', viewPeriod='ytd';
 
 // ── localStorage persistence keys ──
@@ -421,7 +422,7 @@ function saveToStorage(){
     ));
     localStorage.setItem(LS_GOALS,    JSON.stringify(goals));
     localStorage.setItem(LS_CRMGOALS, JSON.stringify(crmGoals));
-    localStorage.setItem(LS_TARGETS,  JSON.stringify({gpTarget,qtcTarget,newBizPctGoal,existingPctGoal}));
+    localStorage.setItem(LS_TARGETS,  JSON.stringify({gpTarget,qtcTarget,newBizPctGoal,existingPctGoal,gpTargets,qtcTargets}));
   }catch(e){ console.warn('localStorage save failed:', e); }
 }
 
@@ -446,6 +447,8 @@ function loadFromStorage(){
       qtcTarget=tObj.qtcTarget||35;
       newBizPctGoal=tObj.newBizPctGoal||30;
       existingPctGoal=tObj.existingPctGoal||70;
+      if(tObj.gpTargets) gpTargets=tObj.gpTargets;
+      if(tObj.qtcTargets) qtcTargets=tObj.qtcTargets;
     }
     if(salesRows.length||crmRows.length||Object.keys(goals).length) hasLiveData=true;
     updateStorageSummary();
@@ -659,7 +662,7 @@ function loadCRMGoals(input){
 }
 function clearAllData(){
   salesRows=[];crmRows=[];goals={};crmGoals={};
-  gpTarget=40;qtcTarget=35;newBizPctGoal=30;existingPctGoal=70;
+  gpTarget=40;qtcTarget=35;newBizPctGoal=30;existingPctGoal=70;gpTargets={};qtcTargets={};
   hasLiveData=false;
   try{
     [LS_SALES,LS_CRM,LS_GOALS,LS_CRMGOALS,LS_TARGETS].forEach(k=>localStorage.removeItem(k));
@@ -835,12 +838,19 @@ function salesMultiBar(d, idx, pw){
   </div>`;
 }
 
-function gpCard(d){const tgt=gpTarget,p=pct(d.gp,tgt);
-  return`<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div class="section-label" style="margin-bottom:0">GP%</div><span class="badge ${bclass(p)}">${btext(p)}</span></div>
-    <div class="med-num" style="color:${pc(p)}">${d.gp}%</div><div class="goal-text">Goal: ${tgt}%</div>${pb(d.gp,tgt)}<div class="pct-text" style="color:${pc(p)};margin-top:6px">${p}% of target</div></div>`;}
+function gpCard(d,repIdx){
+  var tgt=(repIdx==='company')?Math.round(Object.values(gpTargets).reduce(function(a,b){return a+b;},0)/(Object.keys(gpTargets).length||1)):((repIdx!==undefined&&gpTargets[repIdx])?gpTargets[repIdx]:gpTarget);
+  var p=pct(d.gp,tgt);
+  return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div class="section-label" style="margin-bottom:0">GP%</div><span class="badge '+bclass(p)+'">'+btext(p)+'</span></div>'
+    +'<div class="med-num" style="color:'+pc(p)+'">'+d.gp+'%</div>'
+    +'<div class="goal-text">Goal: '+tgt+'%</div>'
+    +pb(d.gp,tgt)
+    +'<div class="pct-text" style="color:'+pc(p)+';margin-top:6px">'+p+'% of goal</div></div>';
+}
 
-function qtcCard(d){
-  const tgt=qtcTarget,qtc=d.qtc_quotes>0?Math.round((d.qtc_orders/d.qtc_quotes)*100):0,p=pct(qtc,tgt);
+function qtcCard(d,repIdx){
+  var tgt=(repIdx==='company')?Math.round(Object.values(qtcTargets).reduce(function(a,b){return a+b;},0)/(Object.keys(qtcTargets).length||1)):((repIdx!==undefined&&qtcTargets[repIdx])?qtcTargets[repIdx]:qtcTarget);
+  const qtc=d.qtc_quotes>0?Math.round((d.qtc_orders/d.qtc_quotes)*100):0,p=pct(qtc,tgt);
   // Use real converted_sales from CSV if available, otherwise estimate
   const convSales=d.converted_sales>0 ? d.converted_sales
     : (d.qtc_quotes>0 ? Math.round((d.periodSales||d.y)*(d.qtc_orders/d.qtc_quotes)) : 0);
@@ -1000,7 +1010,7 @@ function renderCompany(){
     ${!hasLiveData?'<div class="sample-notice">&#9888; Showing sample data &mdash; upload CSVs via sidebar to see live numbers.</div>':''}
     ${weeklyPodium()}
     ${salesCard}
-    <div class="card-grid-2">${gpCard(compD)}${qtcCard(compD)}</div>
+    <div class="card-grid-2">${gpCard(compD,'company')}${qtcCard(compD,'company')}</div>
     ${backorderCard(compD.backorders,'Total pending backorder value across all reps')}
     ${envCard(compD.existing,compD.newbiz)}
     <div style="margin-bottom:14px"><div class="section-label" style="margin-bottom:10px">Copper CRM Activity &mdash; Team Total</div><div class="crm-grid">${crmCards}</div></div>
@@ -1022,7 +1032,7 @@ function renderRep(idx){
     </div>
     ${!hasLiveData?'<div class="sample-notice">&#9888; Showing sample data &mdash; upload CSVs via sidebar.</div>':''}
     ${salesMultiBar(d,idx,pw)}
-    <div class="card-grid-2">${gpCard(d)}${qtcCard(d)}</div>
+    <div class="card-grid-2">${gpCard(d,idx)}${qtcCard(d,idx)}</div>
     ${backorderCard(d.backorders,'Pending backorder value &mdash; revenue in queue')}
     ${envCard(d.existing,d.newbiz)}
     ${crmSection(d,idx,pw)}`;}
@@ -1209,13 +1219,19 @@ function processCRMCSV(text){
 
 function processGoalsCSV(text){
   parseCSV(text).forEach(function(row){
-    if(row['gp_target']||row['gp%_target'])gpTarget=cn(row['gp_target']||row['gp%_target'])||gpTarget;
-    if(row['qtc_target'])qtcTarget=cn(row['qtc_target'])||qtcTarget;
-    if(row['new_biz_pct_goal'])newBizPctGoal=cn(row['new_biz_pct_goal'])||newBizPctGoal;
-    if(row['existing_pct_goal'])existingPctGoal=cn(row['existing_pct_goal'])||existingPctGoal;
-    var idx=matchRep(row['rep']||row['name']);if(idx===-1)return;
+    // Company-wide fallback targets (first row wins if no per-rep)
+    if(row['gp_target']||row['gp%_target']){
+      var gv=cn(row['gp_target']||row['gp%_target']);
+      if(gv) gpTarget=gv;
+    }
+    if(row['qtc_target']){ var qv=cn(row['qtc_target']); if(qv) qtcTarget=qv; }
+    if(row['new_biz_pct_goal']){ var nv=cn(row['new_biz_pct_goal']); if(nv) newBizPctGoal=nv; }
+    if(row['existing_pct_goal']){ var ev=cn(row['existing_pct_goal']); if(ev) existingPctGoal=ev; }
+    var idx=matchRep(row['rep']||row['name']); if(idx===-1)return;
     goals[idx]=cn(row['yearly_goal']||row['goal']||row['annual_goal']);
-    if(row['gp_target'])gpTarget=cn(row['gp_target'])||gpTarget;
+    // Store per-rep GP% and QTC targets
+    if(row['gp_target']){ var gpr=cn(row['gp_target']); if(gpr) gpTargets[idx]=gpr; }
+    if(row['qtc_target']){ var qpr=cn(row['qtc_target']); if(qpr) qtcTargets[idx]=qpr; }
   });
 }
 
