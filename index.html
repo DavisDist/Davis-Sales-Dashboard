@@ -318,7 +318,7 @@
             <strong style="color:var(--accent)">Auto-sync via Drive (recommended)</strong><br/>
             Configure in Settings &rarr; Google Drive URL. Dashboard fetches on every load.<br/><br/>
             <strong style="color:var(--text)">Manual upload columns:</strong><br/>
-            <code>sales.csv</code>: rep, date, sales, gp_pct, quotes, orders, existing, new_biz, backorders, converted_sales<br/>
+            <code>sales.csv</code>: rep, date, sales, gp_pct, quotes, orders, existing($ or %), new_biz($ or %), backorders, converted_sales<br/>
             <code>crm.csv</code>: rep, date, active_cust_visits, prospect_visits, active_cust_calls, prospect_calls<br/>
             <code>goals.csv</code>: rep, yearly_goal, gp_target, qtc_target, new_biz_pct_goal, existing_pct_goal<br/>
             <code>crm_goals.csv</code>: rep, acv_quarterly, dpv_quarterly, acc_quarterly, dpc_quarterly
@@ -369,9 +369,12 @@ const PASSWORD = "ddsales";
 const Q_WEIGHTS = {Q1:0.20, Q2:0.28, Q3:0.28, Q4:0.24};
 
 // Settings loaded from localStorage
-let cfg = { wd:{Q1:63,Q2:64,Q3:63,Q4:61} };
+let cfg = { wd:{Q1:63,Q2:64,Q3:63,Q4:61}, driveUrl:"https://script.google.com/macros/s/AKfycbxIp0zN-n2RCkI8C9p-_Y3Z5pXIX9wKHwQKZeu7MXdGEvIwYCtjuavMj4crfF254nq6Sw/exec" };
 function loadCfg(){
-  try{ const s=localStorage.getItem('dd_cfg2'); if(s){ const p=JSON.parse(s); cfg={...cfg,...p,wd:{...cfg.wd,...(p.wd||{})}}; } }catch(e){}
+  try{ const s=localStorage.getItem('dd_cfg2'); if(s){ const p=JSON.parse(s); cfg={...cfg,...p,wd:{...cfg.wd,...(p.wd||{})}};
+    // Always keep hardcoded URL as fallback if none saved
+    if(!cfg.driveUrl) cfg.driveUrl="https://script.google.com/macros/s/AKfycbxIp0zN-n2RCkI8C9p-_Y3Z5pXIX9wKHwQKZeu7MXdGEvIwYCtjuavMj4crfF254nq6Sw/exec";
+  } }catch(e){}
   document.getElementById('cfg-wd-q1').value=cfg.wd.Q1;
   document.getElementById('cfg-wd-q2').value=cfg.wd.Q2;
   document.getElementById('cfg-wd-q3').value=cfg.wd.Q3;
@@ -735,8 +738,10 @@ function aggSales(idx){
     periodSales:sales, gp:avg(gpArr),
     w,m,q,y,
     qtc_quotes:latest?latest.quotes:0, qtc_orders:latest?latest.orders:0,
-    backorders:latest?latest.backorders:0, existing:latest?latest.existing:0, newbiz:latest?latest.newbiz:0,
+    backorders:latest?latest.backorders:0,
     converted_sales:latest?latest.converted_sales:0,
+    existing:(latest?(latest.existingIsPct?(y*(latest.existing/100)):latest.existing):0),
+    newbiz:(latest?(latest.existingIsPct?(y*(latest.newbiz/100)):latest.newbiz):0),
   };
 }
 
@@ -1193,8 +1198,9 @@ function processSalesCSV(text){
       gp:cn(row['gp_pct']||row['gp%']||row['gp']),
       quotes:parseInt(row['quotes'])||0,
       orders:parseInt(row['orders'])||0,
-      existing:cn(row['existing']||row['existing_$']),
-      newbiz:cn(row['new_biz']||row['new']||row['new_$']),
+      existing:cn(row['existing']||row['existing_$']||row['existing_pct']),
+      newbiz:cn(row['new_biz']||row['new']||row['new_$']||row['new_biz_pct']),
+      existingIsPct:((row['existing']||row['existing_$']||'').indexOf('%')>=0||parseFloat(row['existing']||'0')<=100),
       backorders:cn(row['backorders']||row['backorder']),
       converted_sales:cn(row['converted_sales']||row['converted']||'0')};
     var ei=salesRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===key;});
