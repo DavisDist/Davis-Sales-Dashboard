@@ -481,9 +481,31 @@ function updateStorageSummary(){
 
 // ══ DATE HELPERS ══
 function parseDate(s){
-  if(!s)return null; s=s.trim();
-  if(s.includes('/')){const p=s.split('/');const yr=p[2].length===2?2000+parseInt(p[2]):parseInt(p[2]);return new Date(yr,parseInt(p[0])-1,parseInt(p[1]));}
-  const d=new Date(s);return isNaN(d.getTime())?null:d;
+  if(!s) return null;
+  s=s.toString().trim();
+  // M/D/YYYY or M/D/YY
+  if(s.includes('/')){
+    const p=s.split('/');
+    const yr=p[2]?( p[2].length===2?2000+parseInt(p[2]):parseInt(p[2]) ):new Date().getFullYear();
+    return new Date(yr, parseInt(p[0])-1, parseInt(p[1]));
+  }
+  // YYYY-MM-DD HH:MM:SS (Zapier format) — strip time, parse date only to avoid timezone shifts
+  if(s.match(/^\d{4}-\d{2}-\d{2}[\s T]/)){
+    const parts=s.substring(0,10).split('-');
+    return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  }
+  // YYYY-MM-DD
+  if(s.match(/^\d{4}-\d{2}-\d{2}$/)){
+    const parts=s.split('-');
+    return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  }
+  // ISO format with timezone e.g. 2026-03-23T16:48:29-06:00
+  if(s.includes('T')){
+    const parts=s.substring(0,10).split('-');
+    return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  }
+  const d=new Date(s);
+  return isNaN(d.getTime())?null:d;
 }
 function getWeekStart(d){const dt=new Date(d);const day=dt.getDay();dt.setDate(dt.getDate()+(day===0?-6:1-day));dt.setHours(0,0,0,0);return dt;}
 function getQtr(d){return Math.floor(d.getMonth()/3)+1;}
