@@ -1154,6 +1154,11 @@ function autoFetchFromDrive(silent){
       processCRMCSV(result.data.crm.content);
       loaded.push('CRM');
     }
+    // Load historical CRM data (pre-aggregated YTD totals)
+    if(result.data && result.data.crmHist && result.data.crmHist.content){
+      processCRMCSV(result.data.crmHist.content);  // accumulates on top of live data
+      loaded.push('CRM History');
+    }
     if(result.data && result.data.goals && result.data.goals.content){
       goals={};
       processGoalsCSV(result.data.goals.content);
