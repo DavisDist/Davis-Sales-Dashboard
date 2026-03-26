@@ -772,7 +772,19 @@ const SAMPLE=[
   {w:18600,lw:15900,m:79400, q:221800,y:586000,periodSales:586000,gp:36.7,qtc_quotes:38,qtc_orders:13,converted_sales:79400,backorders:44200,existing:468000,newbiz:118000,acv_w:8, dpv_w:5, acc_w:15,dpc_w:10,acv_q:94, dpv_q:58, acc_q:178,dpc_q:112,acv_p:94, dpv_p:58, acc_p:178,dpc_p:112},
 ];
 
-function getRepData(idx){const ls=aggSales(idx),lc=aggCRM(idx),s=SAMPLE[idx];return{...s,...(ls||{}),...(lc||{})};}
+function getRepData(idx){
+  const ls=aggSales(idx),lc=aggCRM(idx),s=SAMPLE[idx];
+  // If live data exists, don't use sample CRM or sample sales fields
+  // Only fall back to sample for fields not covered by live data
+  if(hasLiveData){
+    // Use zeros for CRM if no live CRM data (don't blend sample)
+    const crmData=lc||{acv_w:0,dpv_w:0,acc_w:0,dpc_w:0,acv_q:0,dpv_q:0,acc_q:0,dpc_q:0,acv_p:0,dpv_p:0,acc_p:0,dpc_p:0};
+    const salesData=ls||{w:0,lw:0,m:0,q:0,y:0,gp:0,periodSales:0,qtc_quotes:0,qtc_orders:0,backorders:0,existing:0,newbiz:0,converted_sales:0};
+    return{...salesData,...crmData};
+  }
+  // No live data — use full sample
+  return{...s,...(ls||{}),...(lc||{})};
+}
 
 // ══ HELPERS ══
 function fmt(n){if(n>=1000000)return'$'+(n/1000000).toFixed(2)+'M';if(n>=1000)return'$'+(n/1000).toFixed(1)+'K';return'$'+Math.round(n).toLocaleString();}
