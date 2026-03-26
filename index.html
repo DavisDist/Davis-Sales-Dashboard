@@ -1292,7 +1292,11 @@ function processCRMCSV(text){
         acc:parseInt(row['active_cust_calls']||row['acc'])||0,
         dpc:parseInt(row['prospect_calls']||row['dpc'])||0};
       var ei=crmRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===key;});
-      if(ei>=0) crmRows[ei]=newRow; else crmRows.push(newRow);
+      if(ei>=0){
+        // Accumulate — don't replace existing rows
+        crmRows[ei].acv+=newRow.acv; crmRows[ei].dpv+=newRow.dpv;
+        crmRows[ei].acc+=newRow.acc; crmRows[ei].dpc+=newRow.dpc;
+      } else { crmRows.push(newRow); }
     });
   }
 }
