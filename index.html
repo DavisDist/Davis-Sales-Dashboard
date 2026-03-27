@@ -1209,6 +1209,11 @@ function autoFetchFromDrive(silent){
       processSalesCSV(result.data.sales.content);
       loaded.push('Sales ('+result.data.sales.lastModified.slice(0,10)+')');
     }
+    // today.csv — current day's hourly Fishbowl data, merges on top of sales.csv history
+    if(result.data && result.data.today && result.data.today.content){
+      processSalesCSV(result.data.today.content);  // accumulates on top, dedupes by rep+date
+      loaded.push('Today');
+    }
     if(result.data && result.data.crm && result.data.crm.content){
       crmRows=[];
       processCRMCSV(result.data.crm.content);
