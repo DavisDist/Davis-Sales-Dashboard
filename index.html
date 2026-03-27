@@ -760,7 +760,9 @@ function aggSales(idx){
 
   rows.forEach(row=>{
     if(inWindow(row.date,pw.start,pw.end)){
-      sales+=row.sales; gpArr.push(row.gp);
+      sales+=row.sales;
+      // Accumulate GP$ for weighted average (GP$ = sales * GP%)
+      gpArr.push({sales:row.sales, gp:row.gp});
       if(!latest||row.date>latest.date)latest=row;
     }
     // sub-period buckets (always current-period context)
@@ -772,9 +774,15 @@ function aggSales(idx){
     if(ry===curY) y+=row.sales;
   });
 
-  const avg=arr=>arr.length?parseFloat((arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1)):0;
+  // Weighted average GP% = total GP dollars / total sales dollars
+  const weightedGP=function(arr){
+    var totalSales=arr.reduce(function(a,r){return a+r.sales;},0);
+    if(totalSales===0) return 0;
+    var totalGP=arr.reduce(function(a,r){return a+(r.sales*(r.gp/100));},0);
+    return parseFloat(((totalGP/totalSales)*100).toFixed(1));
+  };
   return{
-    periodSales:sales, gp:avg(gpArr),
+    periodSales:sales, gp:weightedGP(gpArr),
     w,m,q,y,
     qtc_quotes:latest?latest.quotes:0, qtc_orders:latest?latest.orders:0,
     backorders:latest?latest.backorders:0,
