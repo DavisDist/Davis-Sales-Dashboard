@@ -1282,7 +1282,7 @@ function processSalesCSV(text){
       orders:parseInt(row['orders'])||0,
       existing:cn(row['existing']||row['existing_$']||row['existing_pct']),
       newbiz:cn(row['new_biz']||row['new']||row['new_$']||row['new_biz_pct']),
-      existingIsPct:((row['existing']||row['existing_$']||'').indexOf('%')>=0||parseFloat(row['existing']||'0')<=100),
+      existingIsPct:((row['existing']||row['existing_$']||'').indexOf('%')>=0),
       backorders:cn(row['backorders']||row['backorder']),
       converted_sales:cn(row['converted_sales']||row['converted']||'0')};
     var ei=salesRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===key;});
