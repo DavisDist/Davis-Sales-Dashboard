@@ -1245,7 +1245,7 @@ function render(){
   if(an)an.classList.add('active');
   document.getElementById('page-content').innerHTML=page==='company'?renderCompany():renderRep(parseInt(page));
 }
-function setPage(p){page=p;render();}
+function setPage(p){page=p;render();if(window.innerWidth<=640) closeMobileSidebar();}
 
 // ════════════════════════════════════════════
 // GOOGLE DRIVE AUTO-SYNC
@@ -1440,12 +1440,12 @@ function processGoalsCSV(text){
       var cg=cn(row['gp_target']||row['gp%_target']);
       var cq=cn(row['qtc_target']);
       var ce=cn(row['existing_pct_goal']);
-      var cn2=cn(row['new_biz_pct_goal']);
+      var cnb=cn(row['new_biz_pct_goal']);
       if(cy) companyGoal.yearly=cy;
       if(cg) companyGoal.gp=cg;
       if(cq) companyGoal.qtc=cq;
       if(ce) companyGoal.existing=ce;
-      if(cn2) companyGoal.newBiz=cn2;
+      if(cnb) companyGoal.newBiz=cnb;
       return; // don't process as a rep
     }
 
@@ -1503,12 +1503,7 @@ function closeMobileSidebar(){
   ov.classList.remove('active');
   btn.innerHTML='&#9776;';
 }
-// Close sidebar when navigating on mobile
-var _origSetPage=setPage;
-function setPage(p){
-  _origSetPage(p);
-  if(window.innerWidth<=640) closeMobileSidebar();
-}
+// Mobile sidebar closes on navigation — handled in original setPage below
 function init(){loadCfg();loadFromStorage();autoFetchFromDrive(true);render();}
 function toggleSidebar(){
   const sb=document.querySelector('.sidebar'),btn=document.getElementById('sb-toggle');
