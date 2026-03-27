@@ -403,7 +403,8 @@ const REPS = [
 // ══ DATA STORES ══
 let salesRows=[], crmRows=[], goals={}, crmGoals={};
 let gpTarget=40, qtcTarget=35, newBizPctGoal=30, existingPctGoal=70;
-let gpTargets={}, qtcTargets={};  // per-rep: {repIdx: value}
+let gpTargets={}, qtcTargets={}, existingPctGoals={}, newBizPctGoals={};  // per-rep: {repIdx: value}
+let companyGoal={yearly:9600000, gp:27.5, qtc:64, existing:80, newBiz:20};  // static company goals
 let hasLiveData=false, page='company', viewPeriod='ytd';
 
 // ── localStorage persistence keys ──
@@ -425,7 +426,7 @@ function saveToStorage(){
     ));
     localStorage.setItem(LS_GOALS,    JSON.stringify(goals));
     localStorage.setItem(LS_CRMGOALS, JSON.stringify(crmGoals));
-    localStorage.setItem(LS_TARGETS,  JSON.stringify({gpTarget,qtcTarget,newBizPctGoal,existingPctGoal,gpTargets,qtcTargets}));
+    localStorage.setItem(LS_TARGETS,  JSON.stringify({gpTarget,qtcTarget,newBizPctGoal,existingPctGoal,gpTargets,qtcTargets,existingPctGoals,newBizPctGoals,companyGoal}));
   }catch(e){ console.warn('localStorage save failed:', e); }
 }
 
@@ -452,6 +453,9 @@ function loadFromStorage(){
       existingPctGoal=tObj.existingPctGoal||70;
       if(tObj.gpTargets) gpTargets=tObj.gpTargets;
       if(tObj.qtcTargets) qtcTargets=tObj.qtcTargets;
+      if(tObj.existingPctGoals) existingPctGoals=tObj.existingPctGoals;
+      if(tObj.newBizPctGoals) newBizPctGoals=tObj.newBizPctGoals;
+      if(tObj.companyGoal) companyGoal=tObj.companyGoal;
     }
     if(salesRows.length||crmRows.length||Object.keys(goals).length) hasLiveData=true;
     updateStorageSummary();
@@ -704,7 +708,7 @@ function loadCRMGoals(input){
 }
 function clearAllData(){
   salesRows=[];crmRows=[];goals={};crmGoals={};
-  gpTarget=40;qtcTarget=35;newBizPctGoal=30;existingPctGoal=70;gpTargets={};qtcTargets={};
+  gpTarget=40;qtcTarget=35;newBizPctGoal=30;existingPctGoal=70;gpTargets={};qtcTargets={};existingPctGoals={};newBizPctGoals={};companyGoal={yearly:9600000,gp:27.5,qtc:64,existing:80,newBiz:20};
   hasLiveData=false;
   try{
     [LS_SALES,LS_CRM,LS_GOALS,LS_CRMGOALS,LS_TARGETS].forEach(k=>localStorage.removeItem(k));
@@ -903,7 +907,7 @@ function salesMultiBar(d, idx, pw){
 }
 
 function gpCard(d,repIdx){
-  var tgt=(repIdx==='company')?Math.round(Object.values(gpTargets).reduce(function(a,b){return a+b;},0)/(Object.keys(gpTargets).length||1)):((repIdx!==undefined&&gpTargets[repIdx])?gpTargets[repIdx]:gpTarget);
+  var tgt=(repIdx==='company')?(companyGoal.gp||gpTarget):((repIdx!==undefined&&gpTargets[repIdx])?gpTargets[repIdx]:gpTarget);
   var p=pct(d.gp,tgt);
   return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div class="section-label" style="margin-bottom:0">GP%</div><span class="badge '+bclass(p)+'">'+btext(p)+'</span></div>'
     +'<div class="med-num" style="color:'+pc(p)+'">'+d.gp+'%</div>'
@@ -913,7 +917,7 @@ function gpCard(d,repIdx){
 }
 
 function qtcCard(d,repIdx){
-  var tgt=(repIdx==='company')?Math.round(Object.values(qtcTargets).reduce(function(a,b){return a+b;},0)/(Object.keys(qtcTargets).length||1)):((repIdx!==undefined&&qtcTargets[repIdx])?qtcTargets[repIdx]:qtcTarget);
+  var tgt=(repIdx==='company')?(companyGoal.qtc||qtcTarget):((repIdx!==undefined&&qtcTargets[repIdx])?qtcTargets[repIdx]:qtcTarget);
   const qtc=d.qtc_quotes>0?Math.round((d.qtc_orders/d.qtc_quotes)*100):0,p=pct(qtc,tgt);
   // Use real converted_sales from CSV if available, otherwise estimate
   const convSales=d.converted_sales>0 ? d.converted_sales
@@ -936,9 +940,10 @@ function backorderCard(val,sub){
   return`<div class="backorder-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div class="section-label" style="margin-bottom:0">&#128230; Backorder Pipeline</div><span class="badge badge-pipeline">PIPELINE</span></div>
     <div class="big-num" style="color:var(--pipeline)">${fmt(val)}</div><div class="goal-text" style="margin-top:5px">${sub}</div></div>`;}
 
-function envCard(ex,nw){
+function envCard(ex,nw,repIdx){
   const t=ex+nw||1,exP=Math.round((ex/t)*100),nwP=100-exP;
-  const exG=existingPctGoal||70,nwG=newBizPctGoal||30;
+  const exG=(repIdx==='company')?(companyGoal.existing||existingPctGoal):((repIdx!==undefined&&existingPctGoals[repIdx])?existingPctGoals[repIdx]:existingPctGoal||70);
+  const nwG=(repIdx==='company')?(companyGoal.newBiz||newBizPctGoal):((repIdx!==undefined&&newBizPctGoals[repIdx])?newBizPctGoals[repIdx]:newBizPctGoal||30);
   const exPp=pct(exP,exG),nwPp=pct(nwP,nwG);
   return'<div class="card"><div class="section-label">&#128188; Existing vs. New Business</div>'
     +'<div class="env-split">'
@@ -1004,7 +1009,12 @@ function renderCompany(){
   const all=REPS.map((_,i)=>getRepData(i));
   const sum=key=>all.reduce((a,d)=>a+(d[key]||0),0);
   const qtr=pw.qtr||getQtrLabel(new Date());
-  const cg=REPS.reduce((a,_,i)=>{const g=calcGoals(i,qtr);a.wg+=g.wg;a.mg+=g.mg;a.qg+=g.qg;a.yg+=g.yg;return a;},{wg:0,mg:0,qg:0,yg:0});
+  // Use static company goal from goals.csv
+  const cyg=companyGoal.yearly||9600000;
+  const cqw=Q_WEIGHTS[qtr]||0.28;
+  const cqg=Math.round(cyg*cqw);
+  const cwd=cfg.wd[qtr]||63, cwks=cwd/5;
+  const cg={yg:cyg, qg:cqg, mg:Math.round(cqg/3), wg:Math.round(cqg/cwks)};
   const compD={w:sum('w'),lw:sum('lw'),m:sum('m'),q:sum('q'),y:sum('y'),converted_sales:sum('converted_sales'),periodSales:sum('periodSales'),
     gp:parseFloat((all.reduce((a,d)=>a+d.gp,0)/REPS.length).toFixed(1)),
     qtc_quotes:sum('qtc_quotes'),qtc_orders:sum('qtc_orders'),backorders:sum('backorders'),existing:sum('existing'),newbiz:sum('newbiz'),
@@ -1076,7 +1086,7 @@ function renderCompany(){
     ${salesCard}
     <div class="card-grid-2">${gpCard(compD,'company')}${qtcCard(compD,'company')}</div>
     ${backorderCard(compD.backorders,'Total pending backorder value across all reps')}
-    ${envCard(compD.existing,compD.newbiz)}
+    ${envCard(compD.existing,compD.newbiz,'company')}
     <div style="margin-bottom:14px"><div class="section-label" style="margin-bottom:10px">Copper CRM Activity &mdash; Team Total</div><div class="crm-grid">${crmCards}</div></div>
     <div class="card"><div class="section-label">Yearly Sales Leaderboard</div>${lb}</div>`;}
 
@@ -1098,7 +1108,7 @@ function renderRep(idx){
     ${salesMultiBar(d,idx,pw)}
     <div class="card-grid-2">${gpCard(d,idx)}${qtcCard(d,idx)}</div>
     ${backorderCard(d.backorders,'Pending backorder value &mdash; revenue in queue')}
-    ${envCard(d.existing,d.newbiz)}
+    ${envCard(d.existing,d.newbiz,idx)}
     ${crmSection(d,idx,pw)}`;}
 
 // ══ NAV & RENDER ══
@@ -1328,7 +1338,24 @@ function processCRMCSV(text){
 
 function processGoalsCSV(text){
   parseCSV(text).forEach(function(row){
-    // Company-wide fallback targets (first row wins if no per-rep)
+    var repName=(row['rep']||row['name']||'').trim().toLowerCase();
+
+    // Detect company row
+    if(repName==='company'||repName==='total'||repName==='company total'){
+      var cy=cn(row['yearly_goal']||row['goal']||row['annual_goal']);
+      var cg=cn(row['gp_target']||row['gp%_target']);
+      var cq=cn(row['qtc_target']);
+      var ce=cn(row['existing_pct_goal']);
+      var cn2=cn(row['new_biz_pct_goal']);
+      if(cy) companyGoal.yearly=cy;
+      if(cg) companyGoal.gp=cg;
+      if(cq) companyGoal.qtc=cq;
+      if(ce) companyGoal.existing=ce;
+      if(cn2) companyGoal.newBiz=cn2;
+      return; // don't process as a rep
+    }
+
+    // Company-wide fallback targets
     if(row['gp_target']||row['gp%_target']){
       var gv=cn(row['gp_target']||row['gp%_target']);
       if(gv) gpTarget=gv;
@@ -1338,9 +1365,10 @@ function processGoalsCSV(text){
     if(row['existing_pct_goal']){ var ev=cn(row['existing_pct_goal']); if(ev) existingPctGoal=ev; }
     var idx=matchRep(row['rep']||row['name']); if(idx===-1)return;
     goals[idx]=cn(row['yearly_goal']||row['goal']||row['annual_goal']);
-    // Store per-rep GP% and QTC targets
     if(row['gp_target']){ var gpr=cn(row['gp_target']); if(gpr) gpTargets[idx]=gpr; }
     if(row['qtc_target']){ var qpr=cn(row['qtc_target']); if(qpr) qtcTargets[idx]=qpr; }
+    if(row['existing_pct_goal']){ var epr=cn(row['existing_pct_goal']); if(epr) existingPctGoals[idx]=epr; }
+    if(row['new_biz_pct_goal']){ var npr=cn(row['new_biz_pct_goal']); if(npr) newBizPctGoals[idx]=npr; }
   });
 }
 
