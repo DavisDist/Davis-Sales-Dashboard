@@ -1223,9 +1223,19 @@ function autoFetchFromDrive(silent){
       loaded.push('Sales ('+result.data.sales.lastModified.slice(0,10)+')');
     }
     // today.csv — current day's hourly Fishbowl data, merges on top of sales.csv history
+    // Only process if file has actual sales data (skip zero/weekend exports)
     if(result.data && result.data.today && result.data.today.content){
-      processSalesCSV(result.data.today.content);  // accumulates on top, dedupes by rep+date
-      loaded.push('Today');
+      var todayLines=result.data.today.content.trim().split('\n');
+      var hasRealData=todayLines.slice(1).some(function(line){
+        var cols=line.split(',');
+        return cols.length>=3 && parseFloat((cols[2]||'0').replace(/[$,]/g,''))>0;
+      });
+      if(hasRealData){
+        processSalesCSV(result.data.today.content);
+        loaded.push('Today');
+      } else {
+        loaded.push('Today (no sales)');
+      }
     }
     if(result.data && result.data.crm && result.data.crm.content){
       crmRows=[];
