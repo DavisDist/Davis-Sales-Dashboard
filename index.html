@@ -834,7 +834,8 @@ function aggSales(idx){
   let w=0,lw=0,m=0,q=0,y=0;
   const now=new Date();
   const curW=getWeekStart(now).getTime(), curM=now.getMonth(), curY=now.getFullYear(), curQ=getQtr(now);
-  const lwStart=new Date(getWeekStart(now));lwStart.setDate(lwStart.getDate()-7);const lwTs=lwStart.getTime();
+  const lwStart=new Date(getWeekStart(now));lwStart.setDate(lwStart.getDate()-7);
+  const lwEnd=new Date(lwStart);lwEnd.setDate(lwStart.getDate()+6);lwEnd.setHours(23,59,59);
 
   rows.forEach(row=>{
     if(inWindow(row.date,pw.start,pw.end)){
@@ -846,7 +847,8 @@ function aggSales(idx){
     // sub-period buckets (always current-period context)
     const rw=getWeekStart(row.date).getTime(),rm=row.date.getMonth(),ry=row.date.getFullYear(),rq=getQtr(row.date);
     if(rw===curW) w+=row.sales;
-    if(rw===lwTs) lw+=row.sales;
+    // Last week — use inWindow for reliable timezone-safe comparison
+    if(inWindow(row.date,lwStart,lwEnd)) lw+=row.sales;
     if(ry===curY&&rq===curQ&&rm===curM) m+=row.sales;
     if(ry===curY&&rq===curQ) q+=row.sales;
     if(ry===curY) y+=row.sales;
@@ -861,7 +863,7 @@ function aggSales(idx){
   };
   return{
     periodSales:sales, gp:weightedGP(gpArr),
-    w,m,q,y,
+    w,lw,m,q,y,
     qtc_quotes:latest?latest.quotes:0, qtc_orders:latest?latest.orders:0,
     backorders:latest?latest.backorders:0,
     converted_sales:latest?latest.converted_sales:0,
@@ -1064,6 +1066,21 @@ function crmSection(d,idx,pw){
   return`<div style="margin-bottom:14px"><div class="section-label" style="margin-bottom:10px">Copper CRM Activity</div><div class="crm-grid">${cards}</div></div>`;}
 
 // ══ WEEKLY PODIUM ══
+function lastWeekPodium(){
+  const ranked=REPS.map((_,i)=>{const d=getRepData(i);return{...REPS[i],i,w:d.lw||0,gp:d.gp};}).sort((a,b)=>b.w-a.w);
+  if(!ranked[0]||ranked[0].w===0) return '';
+  const[f,s,t]=[ranked[0],ranked[1],ranked[2]];
+  function col(rep,pos){
+    const colors={1:'#f5c842',2:'#b0b8c8',3:'#cd8c4a'},blocks={1:'first',2:'second',3:'third'},labels={1:'1st',2:'2nd',3:'3rd'};
+    return`<div class="podium-col"><div class="podium-avatar" style="background:${rep.color};box-shadow:0 0 0 3px ${colors[pos]},0 0 18px ${rep.color}44">
+      ${pos===1?'<div class="podium-crown">&#128081;</div>':''}${rep.avatar}</div>
+      <div class="podium-name">${rep.name}</div><div class="podium-sales" style="color:${colors[pos]}">${fmt(rep.w)}</div>
+      <div class="podium-gp">GP% ${rep.gp}%</div><div class="podium-block ${blocks[pos]}">${labels[pos]}</div></div>`;
+  }
+  return`<div class="podium-wrap"><div class="podium-heading">&#127941; Last Week's Leaders &#127941;</div>
+    <div class="podium-stage">${col(s,2)}${col(f,1)}${col(t,3)}</div></div>`;
+}
+
 function weeklyPodium(){
   const ranked=REPS.map((_,i)=>{const d=getRepData(i);return{...REPS[i],i,w:d.w,gp:d.gp};}).sort((a,b)=>b.w-a.w);
   const[f,s,t]=[ranked[0],ranked[1],ranked[2]];
@@ -1156,6 +1173,7 @@ function renderCompany(){
       <div style="display:flex;align-items:center;gap:10px">${periodSelector('sel-company')}<span class="period-badge">${pw.label}</span></div>
     </div>
     ${!hasLiveData?'<div class="sample-notice">&#9888; Showing sample data &mdash; upload CSVs via sidebar to see live numbers.</div>':''}
+    ${lastWeekPodium()}
     ${weeklyPodium()}
     ${salesCard}
     <div class="card-grid-2">${gpCard(compD,'company')}${qtcCard(compD,'company')}</div>
