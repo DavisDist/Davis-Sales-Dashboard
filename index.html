@@ -1086,7 +1086,34 @@ function lastWeekPodium(){
 
 function weeklyPodium(){
   const ranked=REPS.map((_,i)=>{const d=getRepData(i);return{...REPS[i],i,w:d.w,gp:d.gp};}).sort((a,b)=>b.w-a.w);
-  if(!ranked[0]||ranked[0].w===0) return '';
+  const noSales=!ranked[0]||ranked[0].w===0;
+  if(noSales){
+    // Show placeholder podium with empty spots
+    return`<div class="podium-wrap"><div class="podium-heading">&#11088; Weekly Sales Leaders &#11088;</div>
+      <div class="podium-stage">
+        <div class="podium-col">
+          <div class="podium-avatar" style="background:var(--surface2);border:2px dashed var(--border);box-shadow:none;opacity:.5">&#63;</div>
+          <div class="podium-name" style="color:var(--muted)">—</div>
+          <div class="podium-sales" style="color:var(--muted)">—</div>
+          <div class="podium-gp" style="color:var(--muted)">No sales yet</div>
+          <div class="podium-block second" style="opacity:.3">2nd</div>
+        </div>
+        <div class="podium-col">
+          <div class="podium-avatar" style="background:var(--surface2);border:2px dashed var(--border);box-shadow:none;opacity:.5">&#63;</div>
+          <div class="podium-name" style="color:var(--muted)">—</div>
+          <div class="podium-sales" style="color:var(--muted)">—</div>
+          <div class="podium-gp" style="color:var(--muted)">No sales yet</div>
+          <div class="podium-block first" style="opacity:.3">1st</div>
+        </div>
+        <div class="podium-col">
+          <div class="podium-avatar" style="background:var(--surface2);border:2px dashed var(--border);box-shadow:none;opacity:.5">&#63;</div>
+          <div class="podium-name" style="color:var(--muted)">—</div>
+          <div class="podium-sales" style="color:var(--muted)">—</div>
+          <div class="podium-gp" style="color:var(--muted)">No sales yet</div>
+          <div class="podium-block third" style="opacity:.3">3rd</div>
+        </div>
+      </div></div>`;
+  }
   const[f,s,t]=[ranked[0],ranked[1],ranked[2]];
   function col(rep,pos){
     const colors={1:'#f5c842',2:'#b0b8c8',3:'#cd8c4a'},blocks={1:'first',2:'second',3:'third'},labels={1:'1st',2:'2nd',3:'3rd'};
