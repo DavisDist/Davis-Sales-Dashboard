@@ -213,13 +213,15 @@
 
   /* ── MOBILE (640px) — CSS only, no JS changes ── */
   @media(max-width:640px){
-    /* Sidebar stays collapsed on mobile */
+    /* Sidebar stays collapsed on mobile — show icons only, no logo, no toggle */
     .sidebar{width:52px !important;overflow:hidden;}
-    .sidebar-section{display:none;}
-    .sidebar-bottom{display:none;}
-    .sidebar-logo-wrap{display:none;}
+    .sidebar-section{display:none !important;}
+    .sidebar-bottom{display:none !important;}
+    .sidebar-logo-wrap{display:none !important;}
+    .sidebar-toggle{display:none !important;}
+    /* Force icon strip visible regardless of collapsed state */
     .sidebar-icon-strip{display:flex !important;flex-direction:column;align-items:center;padding:8px 0;gap:2px;width:52px;}
-    .sidebar-toggle{display:none;}
+    .sidebar-header{justify-content:center;min-height:auto;padding:8px 0;}
 
     /* Main content takes remaining space */
     .main{padding:12px 10px;min-width:0;}
