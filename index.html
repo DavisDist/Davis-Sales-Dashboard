@@ -211,6 +211,68 @@
     .sales-row-nums{width:140px;}
   }
 
+  /* ── MOBILE (640px) — CSS only, no JS changes ── */
+  @media(max-width:640px){
+    /* Sidebar stays collapsed on mobile */
+    .sidebar{width:52px !important;overflow:hidden;}
+    .sidebar-section{display:none;}
+    .sidebar-bottom{display:none;}
+    .sidebar-logo-wrap{display:none;}
+    .sidebar-icon-strip{display:flex !important;flex-direction:column;align-items:center;padding:8px 0;gap:2px;width:52px;}
+    .sidebar-toggle{display:none;}
+
+    /* Main content takes remaining space */
+    .main{padding:12px 10px;min-width:0;}
+
+    /* Cards full width, less padding */
+    .card{padding:14px 12px;}
+    .backorder-card{padding:14px 12px;}
+    .card-grid-2,.crm-grid{grid-template-columns:1fr;gap:10px;}
+
+    /* Sales rows more compact */
+    .sales-row{gap:6px;padding:7px 0;}
+    .sales-row-label{width:65px;font-size:9px;}
+    .sales-row-bar{flex:1;min-width:0;}
+    .sales-row-nums{width:110px;gap:3px;}
+    .sales-val{font-size:11px;}
+    .sales-goal-txt{font-size:9px;}
+    .sales-pct{font-size:9px;width:28px;}
+
+    /* Smaller numbers */
+    .big-num{font-size:24px;}
+    .med-num{font-size:20px;}
+    .sm-num{font-size:15px;}
+
+    /* Rep header */
+    .page-header-row{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:12px;}
+    .rep-header{gap:10px;}
+    .rep-avatar-lg{width:38px;height:38px;font-size:12px;}
+    .rep-name{font-size:17px;}
+    .period-select{min-width:unset;width:100%;}
+
+    /* QTC stacks */
+    .qtc-split{flex-wrap:wrap;gap:10px;}
+    .qtc-divider{display:none;}
+
+    /* Podium compact */
+    .podium-avatar{width:32px;height:32px;font-size:10px;}
+    .podium-name{font-size:9px;}
+    .podium-sales{font-size:11px;}
+    .podium-block.first{height:44px;}
+    .podium-block.second{height:32px;}
+    .podium-block.third{height:22px;}
+
+    /* Leaderboard */
+    .lb-right{min-width:60px;}
+    .lb-sales{font-size:11px;}
+
+    /* ENV split stays 2 col but compact */
+    .env-split{grid-template-columns:1fr 1fr;gap:8px;}
+
+    /* CRM bars */
+    .crm-bar-num{width:50px;font-size:10px;}
+  }
+
   
 
   .sidebar.collapsed{width:52px;overflow:hidden;}
