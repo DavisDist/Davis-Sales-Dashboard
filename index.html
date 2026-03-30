@@ -611,18 +611,18 @@ function getPeriodWindow(){
       return{start:todayStart,end:todayEnd,label:'Today',bars:['lastweek','today'],showCRM:'week'};
     case 'yesterday':{
       const ys=new Date(y,m,d-1,0,0,0),ye=new Date(y,m,d-1,23,59,59);
-      return{start:ys,end:ye,label:'Yesterday',bars:['lastweek','today'],showCRM:'week'};}
+      return{start:ys,end:ye,label:'Yesterday',bars:['lastweek','today'],showCRM:'period'};}
     case 'this_week':
       return{start:wStart,end:wEnd,label:'This Week',bars:['lastweek','week'],showCRM:'week'};
     case 'last_week':{
       const ls=new Date(wStart);ls.setDate(ls.getDate()-7);
       const le=new Date(ls);le.setDate(ls.getDate()+6);le.setHours(23,59,59);
-      return{start:ls,end:le,label:'Last Week',bars:['lastweek','week'],showCRM:'week'};}
+      return{start:ls,end:le,label:'Last Week',bars:['lastweek','week'],showCRM:'period'};}
     case 'this_month':
-      return{start:startOf(y,m),end:endOf(y,m),label:now.toLocaleString('default',{month:'long'}),bars:['lastweek','month'],showCRM:'week'};
+      return{start:startOf(y,m),end:endOf(y,m),label:now.toLocaleString('default',{month:'long'}),bars:['lastweek','month'],showCRM:'period'};
     case 'last_month':{
       const lm=m===0?11:m-1, ly=m===0?y-1:y;
-      return{start:startOf(ly,lm),end:endOf(ly,lm),label:new Date(ly,lm,1).toLocaleString('default',{month:'long'})+' '+ly,bars:['lastweek','month'],showCRM:'week'};}
+      return{start:startOf(ly,lm),end:endOf(ly,lm),label:new Date(ly,lm,1).toLocaleString('default',{month:'long'})+' '+ly,bars:['lastweek','month'],showCRM:'period'};}
     case 'this_quarter':
       return{start:startOf(y,curQStartMonth),end:endOf(y,curQStartMonth+2),label:getQtrLabel(now)+' '+y,bars:['lastweek','week','month','quarter'],showCRM:'both',qtr:getQtrLabel(now)};
     case 'last_quarter':{
@@ -840,12 +840,18 @@ function aggSales(idx){
   const lwStart=new Date(getWeekStart(now));lwStart.setDate(lwStart.getDate()-7);
   const lwEnd=new Date(lwStart);lwEnd.setDate(lwStart.getDate()+6);lwEnd.setHours(23,59,59);
 
+  let existingSum=0, newbizSum=0;
   rows.forEach(row=>{
     if(inWindow(row.date,pw.start,pw.end)){
       sales+=row.sales;
       // Accumulate GP$ for weighted average (GP$ = sales * GP%)
       gpArr.push({sales:row.sales, gp:row.gp});
       if(!latest||row.date>latest.date)latest=row;
+      // Accumulate existing/newbiz — use dollar amounts directly
+      if(!row.existingIsPct){
+        existingSum+=row.existing||0;
+        newbizSum+=row.newbiz||0;
+      }
     }
     // sub-period buckets (always current-period context)
     const rw=getWeekStart(row.date).getTime(),rm=row.date.getMonth(),ry=row.date.getFullYear(),rq=getQtr(row.date);
@@ -867,11 +873,14 @@ function aggSales(idx){
   return{
     periodSales:sales, gp:weightedGP(gpArr),
     w,lw,m,q,y,
+    // QTC and converted use latest YTD row (they are cumulative by nature)
     qtc_quotes:latest?latest.quotes:0, qtc_orders:latest?latest.orders:0,
+    // Backorders use latest (point-in-time snapshot)
     backorders:latest?latest.backorders:0,
     converted_sales:latest?latest.converted_sales:0,
-    existing:(latest?(latest.existingIsPct?(y*(latest.existing/100)):latest.existing):0),
-    newbiz:(latest?(latest.existingIsPct?(y*(latest.newbiz/100)):latest.newbiz):0),
+    // For $ amounts use accumulated period sum; for % use latest row × yearly
+    existing:(latest&&latest.existingIsPct?(y*(latest.existing/100)):(existingSum||0)),
+    newbiz:(latest&&latest.existingIsPct?(y*(latest.newbiz/100)):(newbizSum||0)),
   };
 }
 
@@ -1051,12 +1060,15 @@ function envCard(ex,nw,repIdx){
 function crmSection(d,idx,pw){
   const qtr=pw.qtr||getQtrLabel(new Date());
   const qg=getCRMGoals(idx),wg=getCRMWeekly(idx,qtr);
-  const showBoth=pw.showCRM==='both', showWeekOnly=pw.showCRM==='week';
+  const showBoth=pw.showCRM==='both', showWeekOnly=pw.showCRM==='week', showPeriod=pw.showCRM==='period';
+  // When showPeriod, use period totals as the primary bar (e.g. last week's CRM)
+  const cw=showPeriod?d.acv_p:d.acv_w, cwg=showPeriod?Math.round(wg.acv_w):wg.acv_w;
+  const wLabel=showPeriod?pw.label||'Period':'This Week';
   const metrics=[
-    {label:'Active Customer Visits',w:d.acv_w,wg:wg.acv_w,q:d.acv_q,qg:qg.acv_q,p:d.acv_p,icon:'&#127962;'},
-    {label:'Dormant/Prospect Visits',w:d.dpv_w,wg:wg.dpv_w,q:d.dpv_q,qg:qg.dpv_q,p:d.dpv_p,icon:'&#128682;'},
-    {label:'Active Customer Calls',w:d.acc_w,wg:wg.acc_w,q:d.acc_q,qg:qg.acc_q,p:d.acc_p,icon:'&#128222;'},
-    {label:'Dormant/Prospect Calls',w:d.dpc_w,wg:wg.dpc_w,q:d.dpc_q,qg:qg.dpc_q,p:d.dpc_p,icon:'&#128242;'},
+    {label:'Active Customer Visits',w:showPeriod?d.acv_p:d.acv_w,wg:wg.acv_w,q:d.acv_q,qg:qg.acv_q,p:d.acv_p,icon:'&#127962;',wLabel},
+    {label:'Dormant/Prospect Visits',w:showPeriod?d.dpv_p:d.dpv_w,wg:wg.dpv_w,q:d.dpv_q,qg:qg.dpv_q,p:d.dpv_p,icon:'&#128682;',wLabel},
+    {label:'Active Customer Calls',w:showPeriod?d.acc_p:d.acc_w,wg:wg.acc_w,q:d.acc_q,qg:qg.acc_q,p:d.acc_p,icon:'&#128222;',wLabel},
+    {label:'Dormant/Prospect Calls',w:showPeriod?d.dpc_p:d.dpc_w,wg:wg.dpc_w,q:d.dpc_q,qg:qg.dpc_q,p:d.dpc_p,icon:'&#128242;',wLabel},
   ];
   const cards=metrics.map(m=>{
     const wp=pct(m.w,m.wg),qp=pct(m.q,m.qg);
