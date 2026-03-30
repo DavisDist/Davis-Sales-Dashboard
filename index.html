@@ -198,6 +198,7 @@
   .sample-notice{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:9px 15px;font-size:12px;color:var(--warn);margin-bottom:16px;}
 
   /* PODIUM */
+  .podium-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:4px;}
   .podium-wrap{margin-bottom:18px;}
   .podium-heading{font-size:10px;letter-spacing:3px;color:var(--warn);text-transform:uppercase;text-align:center;margin-bottom:14px;}
   .podium-stage{display:flex;align-items:flex-end;justify-content:center;gap:10px;}
@@ -280,6 +281,8 @@
 
     /* CRM bars */
     .crm-bar-num{width:50px;font-size:10px;}
+    /* Stack podiums on mobile */
+    .podium-row{grid-template-columns:1fr;}
   }
 
   
@@ -967,12 +970,12 @@ function salesMultiBar(d, idx, pw){
     ${visRows.map(r=>{
       const p=pct(r.val,r.goal);
       const mu=r.muted===true;
-      const vc=mu?'color:'+bc(p)+';opacity:.6':'color:'+pc(p)+';';
+      const vc='color:'+pc(p);
       const barColor=bc(p);
-      const bar=mu?'<div class="pbar-track"><div class="pbar-fill" style="width:'+Math.min(p,100)+'%;background:'+barColor+';opacity:.45"></div></div>':pb(r.val,r.goal);
+      const bar=mu?'<div class="pbar-track"><div class="pbar-fill" style="width:'+Math.min(p,100)+'%;background:'+barColor+';"></div></div>':pb(r.val,r.goal);
       const note=r.note?'<div style="font-size:8px;letter-spacing:.5px;color:var(--muted);text-transform:none;margin-top:1px">'+r.note+'</div>':'';
-      return'<div class="sales-row" style="'+(mu?'opacity:.65':'')+'">'
-        +'<div class="sales-row-label" style="'+(mu?'opacity:.6':'')+'">'+r.label+note+'</div>'
+      return'<div class="sales-row">'
+        +'<div class="sales-row-label">'+r.label+note+'</div>'
         +'<div class="sales-row-bar">'+bar+'</div>'
         +'<div class="sales-row-nums"><span class="sales-val" style="'+vc+'">'+fmt(r.val)+'</span>'
         +'<span class="sales-goal-txt">/ '+fmt(r.goal)+'</span>'
@@ -1083,6 +1086,7 @@ function lastWeekPodium(){
 
 function weeklyPodium(){
   const ranked=REPS.map((_,i)=>{const d=getRepData(i);return{...REPS[i],i,w:d.w,gp:d.gp};}).sort((a,b)=>b.w-a.w);
+  if(!ranked[0]||ranked[0].w===0) return '';
   const[f,s,t]=[ranked[0],ranked[1],ranked[2]];
   function col(rep,pos){
     const colors={1:'#f5c842',2:'#b0b8c8',3:'#cd8c4a'},blocks={1:'first',2:'second',3:'third'},labels={1:'1st',2:'2nd',3:'3rd'};
@@ -1155,10 +1159,10 @@ function renderCompany(){
     ${visSalesRows.map(r=>{
       const p=pct(r.val,r.goal);
       const mu=r.muted===true;
-      const vc=mu?'color:'+bc(p)+';opacity:.6':'color:'+pc(p)+';';
+      const vc='color:'+pc(p);
       const barColor=bc(p);
-      const bar=mu?'<div class="pbar-track"><div class="pbar-fill" style="width:'+Math.min(p,100)+'%;background:'+barColor+';opacity:.45"></div></div>':pb(r.val,r.goal);
-      return'<div class="sales-row" style="'+(mu?'opacity:.65':'')+'">'
+      const bar=mu?'<div class="pbar-track"><div class="pbar-fill" style="width:'+Math.min(p,100)+'%;background:'+barColor+';"></div></div>':pb(r.val,r.goal);
+      return'<div class="sales-row">'
         +'<div class="sales-row-label" style="'+(mu?'opacity:.6':'')+'">'+r.label+'</div>'
         +'<div class="sales-row-bar">'+bar+'</div>'
         +'<div class="sales-row-nums"><span class="sales-val" style="'+vc+'">'+fmt(r.val)+'</span>'
@@ -1173,8 +1177,7 @@ function renderCompany(){
       <div style="display:flex;align-items:center;gap:10px">${periodSelector('sel-company')}<span class="period-badge">${pw.label}</span></div>
     </div>
     ${!hasLiveData?'<div class="sample-notice">&#9888; Showing sample data &mdash; upload CSVs via sidebar to see live numbers.</div>':''}
-    ${lastWeekPodium()}
-    ${weeklyPodium()}
+    <div class="podium-row">${lastWeekPodium()}${weeklyPodium()}</div>
     ${salesCard}
     <div class="card-grid-2">${gpCard(compD,'company')}${qtcCard(compD,'company')}</div>
     ${backorderCard(compD.backorders,'Total pending backorder value across all reps')}
