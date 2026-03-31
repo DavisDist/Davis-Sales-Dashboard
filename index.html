@@ -1314,7 +1314,7 @@ function renderRep(idx){
     ${!hasLiveData?'<div class="sample-notice">&#9888; Showing sample data &mdash; upload CSVs via sidebar.</div>':''}
     ${salesMultiBar(d,idx,pw)}
     <div class="card-grid-2">${gpCard(d,idx)}${qtcCard(d,idx)}</div>
-    ${backorderCard(d.backorders,d.backorders_sub,'Pending backorder value &mdash; revenue in queue')}
+    ${backorderCard(d.backorders,null,idx)}
     ${envCard(d.existing,d.newbiz,idx)}
     ${crmSection(d,idx,pw)}`;}
 
