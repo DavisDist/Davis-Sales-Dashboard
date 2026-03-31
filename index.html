@@ -221,25 +221,17 @@
 
   /* ── MOBILE (640px) — CSS only, no JS changes ── */
   @media(max-width:640px){
-    /* Sidebar stays collapsed on mobile — show icons only, no logo, no toggle */
     .sidebar{width:52px !important;overflow:hidden;}
     .sidebar-section{display:none !important;}
     .sidebar-bottom{display:none !important;}
     .sidebar-logo-wrap{display:none !important;}
     .sidebar-toggle{display:none !important;}
-    /* Force icon strip visible regardless of collapsed state */
     .sidebar-icon-strip{display:flex !important;flex-direction:column;align-items:center;padding:8px 0;gap:2px;width:52px;}
     .sidebar-header{justify-content:center;min-height:auto;padding:8px 0;}
-
-    /* Main content takes remaining space */
     .main{padding:12px 10px;min-width:0;}
-
-    /* Cards full width, less padding */
     .card{padding:14px 12px;}
     .backorder-card{padding:14px 12px;}
     .card-grid-2,.crm-grid{grid-template-columns:1fr;gap:10px;}
-
-    /* Sales rows more compact */
     .sales-row{gap:6px;padding:7px 0;}
     .sales-row-label{width:65px;font-size:9px;}
     .sales-row-bar{flex:1;min-width:0;}
@@ -247,45 +239,28 @@
     .sales-val{font-size:11px;}
     .sales-goal-txt{font-size:9px;}
     .sales-pct{font-size:9px;width:28px;}
-
-    /* Smaller numbers */
     .big-num{font-size:24px;}
     .med-num{font-size:20px;}
     .sm-num{font-size:15px;}
-
-    /* Rep header */
     .page-header-row{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:12px;}
     .rep-header{gap:10px;}
     .rep-avatar-lg{width:38px;height:38px;font-size:12px;}
     .rep-name{font-size:17px;}
     .period-select{min-width:unset;width:100%;}
-
-    /* QTC stacks */
     .qtc-split{flex-wrap:wrap;gap:10px;}
     .qtc-divider{display:none;}
-
-    /* Podium compact */
     .podium-avatar{width:32px;height:32px;font-size:10px;}
     .podium-name{font-size:9px;}
     .podium-sales{font-size:11px;}
     .podium-block.first{height:44px;}
     .podium-block.second{height:32px;}
     .podium-block.third{height:22px;}
-
-    /* Leaderboard */
     .lb-right{min-width:60px;}
     .lb-sales{font-size:11px;}
-
-    /* ENV split stays 2 col but compact */
     .env-split{grid-template-columns:1fr 1fr;gap:8px;}
-
-    /* CRM bars */
     .crm-bar-num{width:50px;font-size:10px;}
-    /* Stack podiums on mobile */
     .podium-row{grid-template-columns:1fr;}
   }
-
-  
 
   .sidebar.collapsed{width:52px;overflow:hidden;}
   .sidebar-header{position:relative;padding:14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;min-height:56px;}
@@ -449,7 +424,6 @@ const Q_WEIGHTS = {Q1:0.20, Q2:0.28, Q3:0.28, Q4:0.24};
 let cfg = { wd:{Q1:63,Q2:64,Q3:63,Q4:61}, driveUrl:"https://script.google.com/macros/s/AKfycbxIp0zN-n2RCkI8C9p-_Y3Z5pXIX9wKHwQKZeu7MXdGEvIwYCtjuavMj4crfF254nq6Sw/exec" };
 function loadCfg(){
   try{ const s=localStorage.getItem('dd_cfg2'); if(s){ const p=JSON.parse(s); cfg={...cfg,...p,wd:{...cfg.wd,...(p.wd||{})}};
-    // Always keep hardcoded URL as fallback if none saved
     if(!cfg.driveUrl) cfg.driveUrl="https://script.google.com/macros/s/AKfycbxIp0zN-n2RCkI8C9p-_Y3Z5pXIX9wKHwQKZeu7MXdGEvIwYCtjuavMj4crfF254nq6Sw/exec";
   } }catch(e){}
   document.getElementById('cfg-wd-q1').value=cfg.wd.Q1;
@@ -480,21 +454,18 @@ const REPS = [
 // ══ DATA STORES ══
 let salesRows=[], crmRows=[], goals={}, crmGoals={};
 let gpTarget=40, qtcTarget=35, newBizPctGoal=30, existingPctGoal=70;
-let gpTargets={}, qtcTargets={}, existingPctGoals={}, newBizPctGoals={};  // per-rep: {repIdx: value}
-let companyGoal={yearly:9600000, gp:27.5, qtc:64, existing:80, newBiz:20};  // static company goals
+let gpTargets={}, qtcTargets={}, existingPctGoals={}, newBizPctGoals={};
+let companyGoal={yearly:9600000, gp:27.5, qtc:64, existing:80, newBiz:20};
 let hasLiveData=false, page='company', viewPeriod='ytd';
 
-// ── localStorage persistence keys ──
 const LS_SALES    = 'dd_salesRows';
 const LS_CRM      = 'dd_crmRows';
 const LS_GOALS    = 'dd_goals';
 const LS_CRMGOALS = 'dd_crmGoals';
 const LS_TARGETS  = 'dd_targets';
-const LS_COUNTS   = 'dd_counts';
 
 function saveToStorage(){
   try{
-    // Serialize dates as ISO strings for storage
     localStorage.setItem(LS_SALES, JSON.stringify(
       salesRows.map(r=>({...r, date:r.date.toISOString()}))
     ));
@@ -510,13 +481,9 @@ function saveToStorage(){
 function loadFromStorage(){
   try{
     const sr = localStorage.getItem(LS_SALES);
-    if(sr){
-      salesRows = JSON.parse(sr).map(r=>({...r, date:new Date(r.date)}));
-    }
+    if(sr){ salesRows = JSON.parse(sr).map(r=>({...r, date:new Date(r.date)})); }
     const cr = localStorage.getItem(LS_CRM);
-    if(cr){
-      crmRows = JSON.parse(cr).map(r=>({...r, date:new Date(r.date)}));
-    }
+    if(cr){ crmRows = JSON.parse(cr).map(r=>({...r, date:new Date(r.date)})); }
     const g = localStorage.getItem(LS_GOALS);
     if(g) goals = JSON.parse(g);
     const cg = localStorage.getItem(LS_CRMGOALS);
@@ -540,7 +507,6 @@ function loadFromStorage(){
 }
 
 function rowKey(repIdx, date){
-  // Unique key per rep per day — used to deduplicate
   return repIdx+'_'+date.toISOString().slice(0,10);
 }
 
@@ -555,8 +521,7 @@ function updateStorageSummary(){
   var dates=salesRows.map(function(r){return r.date;}).sort(function(a,b){return a-b;});
   var first=dates.length?dates[0].toLocaleDateString():'—';
   var last=dates.length?dates[dates.length-1].toLocaleDateString():'—';
-  var rowCount=salesRows.length;
-  el.innerHTML=rowCount+' rows &middot; '+first+' &ndash; '+last;
+  el.innerHTML=salesRows.length+' rows &middot; '+first+' &ndash; '+last;
   el.style.color='var(--accent)';
 }
 
@@ -564,23 +529,19 @@ function updateStorageSummary(){
 function parseDate(s){
   if(!s) return null;
   s=s.toString().trim();
-  // M/D/YYYY or M/D/YY
   if(s.includes('/')){
     const p=s.split('/');
     const yr=p[2]?( p[2].length===2?2000+parseInt(p[2]):parseInt(p[2]) ):new Date().getFullYear();
     return new Date(yr, parseInt(p[0])-1, parseInt(p[1]));
   }
-  // YYYY-MM-DD HH:MM:SS (Zapier format) — strip time, parse date only to avoid timezone shifts
   if(s.match(/^\d{4}-\d{2}-\d{2}[\s T]/)){
     const parts=s.substring(0,10).split('-');
     return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
   }
-  // YYYY-MM-DD
   if(s.match(/^\d{4}-\d{2}-\d{2}$/)){
     const parts=s.split('-');
     return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
   }
-  // ISO format with timezone e.g. 2026-03-23T16:48:29-06:00
   if(s.includes('T')){
     const parts=s.substring(0,10).split('-');
     return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
@@ -592,8 +553,7 @@ function getWeekStart(d){const dt=new Date(d);const day=dt.getDay();dt.setDate(d
 function getQtr(d){return Math.floor(d.getMonth()/3)+1;}
 function getQtrLabel(d){return'Q'+getQtr(d);}
 
-// ══ PERIOD WINDOW CALCULATION ══
-// Returns {start, end, label, qtr, isHistorical} based on viewPeriod string
+// ══ PERIOD WINDOW ══
 function getPeriodWindow(){
   const now=new Date();
   const y=now.getFullYear(), m=now.getMonth(), d=now.getDate();
@@ -716,7 +676,7 @@ function loadSales(input){
       hasLiveData=true;
       saveToStorage();
       updateStorageSummary();
-      document.getElementById('st-sales').textContent='✓ +'+added+' rows ('+(updated?updated+' updated':'')+(updated?')':')');
+      document.getElementById('st-sales').textContent='✓ +'+added+' rows';
       stamp();render();
     }catch(e){document.getElementById('st-sales').textContent='⚠ '+e.message;}
   });
@@ -741,7 +701,7 @@ function loadCRM(input){
       });
       hasLiveData=true;
       saveToStorage();
-      document.getElementById('st-crm').textContent='✓ +'+added+' rows ('+(updated?updated+' updated':'')+(updated?')':')');
+      document.getElementById('st-crm').textContent='✓ +'+added+' rows';
       stamp();render();
     }catch(e){document.getElementById('st-crm').textContent='⚠ '+e.message;}
   });
@@ -805,7 +765,6 @@ const FALLBACK_GOALS=[1420000,1120000,1420000,1020000,1720000,1220000,980000];
 function getYearlyGoal(idx){return goals[idx]||FALLBACK_GOALS[idx]||1000000;}
 
 function calcGoals(idx, qtr){
-  // qtr = 'Q1','Q2','Q3','Q4' — derived from period window
   const q = qtr || getQtrLabel(new Date());
   const yg=getYearlyGoal(idx);
   const qw=Q_WEIGHTS[q]||0.28;
@@ -831,9 +790,7 @@ function aggSales(idx){
   const rows=salesRows.filter(r=>r.repIdx===idx);
   if(!rows.length)return null;
 
-  // For period window: accumulate sales, avg GP, take latest for point-in-time metrics
   let sales=0, gpArr=[], latest=null;
-  // Also compute week/month/quarter/year sub-totals within window
   let w=0,lw=0,m=0,q=0,y=0;
   const now=new Date();
   const curW=getWeekStart(now).getTime(), curM=now.getMonth(), curY=now.getFullYear(), curQ=getQtr(now);
@@ -843,21 +800,17 @@ function aggSales(idx){
   rows.forEach(row=>{
     if(inWindow(row.date,pw.start,pw.end)){
       sales+=row.sales;
-      // Accumulate GP$ for weighted average (GP$ = sales * GP%)
       gpArr.push({sales:row.sales, gp:row.gp});
       if(!latest||row.date>latest.date)latest=row;
     }
-    // sub-period buckets (always current-period context)
     const rw=getWeekStart(row.date).getTime(),rm=row.date.getMonth(),ry=row.date.getFullYear(),rq=getQtr(row.date);
     if(rw===curW) w+=row.sales;
-    // Last week — use inWindow for reliable timezone-safe comparison
     if(inWindow(row.date,lwStart,lwEnd)) lw+=row.sales;
     if(ry===curY&&rq===curQ&&rm===curM) m+=row.sales;
     if(ry===curY&&rq===curQ) q+=row.sales;
     if(ry===curY) y+=row.sales;
   });
 
-  // Weighted average GP% = total GP dollars / total sales dollars
   const weightedGP=function(arr){
     var totalSales=arr.reduce(function(a,r){return a+r.sales;},0);
     if(totalSales===0) return 0;
@@ -867,9 +820,7 @@ function aggSales(idx){
   return{
     periodSales:sales, gp:weightedGP(gpArr),
     w,lw,m,q,y,
-    // QTC and converted use latest YTD row (they are cumulative by nature)
     qtc_quotes:latest?latest.quotes:0, qtc_orders:latest?latest.orders:0,
-    // Backorders use latest (point-in-time snapshot)
     backorders:latest?latest.backorders:0,
     converted_sales:latest?latest.converted_sales:0,
     existing:(latest?(latest.existingIsPct?(y*(latest.existing/100)):latest.existing):0),
@@ -883,7 +834,7 @@ function aggCRM(idx){
   if(!rows.length)return null;
   const now=new Date(),curW=getWeekStart(now).getTime(),curY=now.getFullYear(),curQ=getQtr(now);
   let acv_w=0,dpv_w=0,acc_w=0,dpc_w=0,acv_q=0,dpv_q=0,acc_q=0,dpc_q=0;
-  let acv_p=0,dpv_p=0,acc_p=0,dpc_p=0; // period totals
+  let acv_p=0,dpv_p=0,acc_p=0,dpc_p=0;
   rows.forEach(row=>{
     if(inWindow(row.date,pw.start,pw.end)){acv_p+=row.acv;dpv_p+=row.dpv;acc_p+=row.acc;dpc_p+=row.dpc;}
     const rw=getWeekStart(row.date).getTime(),rq=getQtr(row.date),ry=row.date.getFullYear();
@@ -905,16 +856,13 @@ const SAMPLE=[
 ];
 
 function getRepData(idx){
-  const ls=aggSales(idx),lc=aggCRM(idx),s=SAMPLE[idx];
-  // If live data exists, don't use sample CRM or sample sales fields
-  // Only fall back to sample for fields not covered by live data
+  const ls=aggSales(idx),lc=aggCRM(idx);
   if(hasLiveData){
-    // Use zeros for CRM if no live CRM data (don't blend sample)
     const crmData=lc||{acv_w:0,dpv_w:0,acc_w:0,dpc_w:0,acv_q:0,dpv_q:0,acc_q:0,dpc_q:0,acv_p:0,dpv_p:0,acc_p:0,dpc_p:0};
     const salesData=ls||{w:0,lw:0,m:0,q:0,y:0,gp:0,periodSales:0,qtc_quotes:0,qtc_orders:0,backorders:0,existing:0,newbiz:0,converted_sales:0};
     return{...salesData,...crmData};
   }
-  // No live data — use full sample
+  const s=SAMPLE[idx];
   return{...s,...(ls||{}),...(lc||{})};
 }
 
@@ -953,7 +901,6 @@ function salesMultiBar(d, idx, pw){
   const {wg,mg,qg,yg,wd,weeks,q} = g;
   const qLbl=`${q} &middot; ${Math.round((Q_WEIGHTS[q]||0.28)*100)}% of yr`;
 
-  // Show bars relevant to the selected period
   const bars = pw.bars || ['lastweek','week','month','quarter','year'];
   const allRows=[
     {key:'lastweek', label:'Last Week', val:d.lw||0, goal:wg, muted:true},
@@ -963,8 +910,6 @@ function salesMultiBar(d, idx, pw){
     {key:'year',  label:'Yearly',  val:d.y, goal:yg},
   ];
   const visRows = allRows.filter(r=>bars.includes(r.key));
-
-  // If viewing isolated period (not ytd), show period total at top
   const showPeriod = !['ytd','this_week','this_month','this_quarter'].includes(viewPeriod);
 
   return `<div class="card"><div class="section-label">Total Sales vs. Sales Goal</div>
@@ -1000,7 +945,6 @@ function gpCard(d,repIdx){
 function qtcCard(d,repIdx){
   var tgt=(repIdx==='company')?(companyGoal.qtc||qtcTarget):((repIdx!==undefined&&qtcTargets[repIdx])?qtcTargets[repIdx]:qtcTarget);
   const qtc=d.qtc_quotes>0?Math.round((d.qtc_orders/d.qtc_quotes)*100):0,p=pct(qtc,tgt);
-  // Use real converted_sales from CSV if available, otherwise estimate
   const convSales=d.converted_sales>0 ? d.converted_sales
     : (d.qtc_quotes>0 ? Math.round((d.periodSales||d.y)*(d.qtc_orders/d.qtc_quotes)) : 0);
   return'<div class="card"><div class="section-label">QTC: Quote-to-Conversion</div>'
@@ -1019,7 +963,7 @@ function qtcCard(d,repIdx){
 
 function backorderCard(val,sub){
   return`<div class="backorder-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div class="section-label" style="margin-bottom:0">&#128230; Backorder Pipeline</div><span class="badge badge-pipeline">PIPELINE</span></div>
-    <div class="big-num" style="color:var(--pipeline)">${fmt(val)}</div><div class="goal-text" style="margin-top:5px">${sub}</div></div>`;}
+    <div class="big-num" style="color:var(--pipeline)">${fmt(val)}</div><div class="goal-text" style="margin-top:5px">${sub||''}</div></div>`;}
 
 function envCard(ex,nw,repIdx){
   const t=ex+nw||1,exP=Math.round((ex/t)*100),nwP=100-exP;
@@ -1050,12 +994,13 @@ function envCard(ex,nw,repIdx){
     +'<span style="color:var(--accent)">&#9632; New</span></div></div>';
 }
 
+// ══ FIX: crmSection now derives showPeriod locally instead of relying on outer scope ══
 function crmSection(d,idx,pw){
   const qtr=pw.qtr||getQtrLabel(new Date());
   const qg=getCRMGoals(idx),wg=getCRMWeekly(idx,qtr);
-  const showBoth=pw.showCRM==='both', showWeekOnly=pw.showCRM==='week';
-  // When showPeriod, use period totals as the primary bar (e.g. last week's CRM)
-  const cw=showPeriod?d.acv_p:d.acv_w, cwg=showPeriod?Math.round(wg.acv_w):wg.acv_w;
+  const showBoth=pw.showCRM==='both';
+  // Derive showPeriod locally — was the bug (referenced undefined outer variable)
+  const showPeriod = !['ytd','this_week','this_month','this_quarter'].includes(viewPeriod);
   const metrics=[
     {label:'Active Customer Visits',w:d.acv_w,wg:wg.acv_w,q:d.acv_q,qg:qg.acv_q,p:d.acv_p,icon:'&#127962;'},
     {label:'Dormant/Prospect Visits',w:d.dpv_w,wg:wg.dpv_w,q:d.dpv_q,qg:qg.dpv_q,p:d.dpv_p,icon:'&#128682;'},
@@ -1092,7 +1037,6 @@ function weeklyPodium(){
   const ranked=REPS.map((_,i)=>{const d=getRepData(i);return{...REPS[i],i,w:d.w,gp:d.gp};}).sort((a,b)=>b.w-a.w);
   const noSales=!ranked[0]||ranked[0].w===0;
   if(noSales){
-    // Show placeholder podium with empty spots
     return`<div class="podium-wrap"><div class="podium-heading">&#11088; Weekly Sales Leaders &#11088;</div>
       <div class="podium-stage">
         <div class="podium-col">
@@ -1135,7 +1079,6 @@ function renderCompany(){
   const all=REPS.map((_,i)=>getRepData(i));
   const sum=key=>all.reduce((a,d)=>a+(d[key]||0),0);
   const qtr=pw.qtr||getQtrLabel(new Date());
-  // Use static company goal from goals.csv
   const cyg=companyGoal.yearly||9600000;
   const cqw=Q_WEIGHTS[qtr]||0.28;
   const cqg=Math.round(cyg*cqw);
@@ -1158,8 +1101,8 @@ function renderCompany(){
       <div class="lb-info"><div class="lb-name">${r.name}</div>${pb(r.y,r.yg,true)}</div>
       <div class="lb-right"><div class="lb-sales" style="color:${pc(p)}">${fmt(r.y)}</div><div class="lb-pct" style="color:${pc(p)}">${p}% of yearly</div></div></div>`;}).join('');
 
-  // Company CRM section with summed goals
   const showBoth=pw.showCRM==='both';
+  const showPeriod=!['ytd','this_week','this_month','this_quarter'].includes(viewPeriod);
   const crmM=[
     {label:'Active Customer Visits',w:compD.acv_w,wg:ccw.acv_w,q:compD.acv_q,qg:ccg.acv_q,icon:'&#127962;'},
     {label:'Dormant/Prospect Visits',w:compD.dpv_w,wg:ccw.dpv_w,q:compD.dpv_q,qg:ccg.dpv_q,icon:'&#128682;'},
@@ -1173,8 +1116,7 @@ function renderCompany(){
       ${showBoth?`<div class="crm-bar-row"><div class="crm-bar-label">Quarterly</div><div class="crm-bar-wrap">${pb(m.q,m.qg,true)}</div><div class="crm-bar-num" style="color:${pc(qp)}">${m.q} / ${m.qg}</div></div><div style="font-size:10px;color:${pc(qp)};text-align:right">${qp}%</div>`:''}
     </div></div>`;}).join('');
 
-  // Sales bars for company
-  const bars=pw.bars||['week','month','quarter','year'];
+  const compBars=pw.bars?['lastweek',...pw.bars]:['lastweek','week','month','quarter','year'];
   const allSalesRows=[
     {key:'lastweek',label:'Last Week',val:compD.lw||0,goal:cg.wg,muted:true},
     {key:'week',label:'This Week',val:compD.w,goal:cg.wg},
@@ -1182,9 +1124,7 @@ function renderCompany(){
     {key:'quarter',label:`${qtr} &middot; ${Math.round((Q_WEIGHTS[qtr]||0.28)*100)}% of yr`,val:compD.q,goal:cg.qg},
     {key:'year',label:'Yearly',val:compD.y,goal:cg.yg},
   ];
-  const compBars=pw.bars?['lastweek',...pw.bars]:['lastweek','week','month','quarter','year'];
   const visSalesRows=allSalesRows.filter(r=>compBars.includes(r.key));
-  const showPeriod=!['ytd','this_week','this_month','this_quarter'].includes(viewPeriod);
   const salesCard=`<div class="card"><div class="section-label">Total Sales vs. Sales Goal</div>
     ${showPeriod?`<div class="sales-row"><div class="sales-row-label" style="color:var(--accent2)">Period Total</div><div class="sales-row-bar"></div><div class="sales-row-nums"><span class="sales-val" style="color:var(--accent2)">${fmt(compD.periodSales)}</span></div></div>`:''}
     ${visSalesRows.map(r=>{
@@ -1217,20 +1157,15 @@ function renderCompany(){
     <div class="card"><div class="section-label">Yearly Sales Leaderboard</div>${lb}</div>`;}
 
 // ══ RENDER REP ══
-
-// Calculate prorated yearly goal — what the rep SHOULD have sold by today
-// based on quarter weights and days elapsed in the year
 function proratedGoal(yearlyGoal){
   var now=new Date();
   var startOfYear=new Date(now.getFullYear(),0,1);
   var endOfYear=new Date(now.getFullYear(),11,31);
   var totalDays=(endOfYear-startOfYear)/(1000*60*60*24)+1;
   var daysElapsed=Math.floor((now-startOfYear)/(1000*60*60*24))+1;
-  var pct=Math.min(daysElapsed/totalDays,1);
-  return Math.round(yearlyGoal*pct);
+  var p=Math.min(daysElapsed/totalDays,1);
+  return Math.round(yearlyGoal*p);
 }
-
-
 
 function renderRep(idx){
   const pw=getPeriodWindow();
@@ -1316,13 +1251,10 @@ function autoFetchFromDrive(silent){
   var statusEl=document.getElementById('sync-status');
   if(!silent && statusEl){ statusEl.textContent='Syncing...'; statusEl.style.color='var(--warn)'; }
 
-  // Remove any existing JSONP script tags first
   document.querySelectorAll('.dd-jsonp-script').forEach(function(s){ s.parentNode.removeChild(s); });
 
-  // Create unique callback name
   var cbName='ddCB'+Date.now();
 
-  // Timeout handler
   var timer=setTimeout(function(){
     window[cbName]=null;
     document.querySelectorAll('.dd-jsonp-script').forEach(function(s){ s.parentNode.removeChild(s); });
@@ -1332,7 +1264,6 @@ function autoFetchFromDrive(silent){
     }
   }, 15000);
 
-  // Define callback BEFORE injecting script
   window[cbName]=function(result){
     clearTimeout(timer);
     window[cbName]=null;
@@ -1353,8 +1284,6 @@ function autoFetchFromDrive(silent){
       processSalesCSV(result.data.sales.content);
       loaded.push('Sales ('+result.data.sales.lastModified.slice(0,10)+')');
     }
-    // today.csv — current day's hourly Fishbowl data, merges on top of sales.csv history
-    // Only process if file has actual sales data (skip zero/weekend exports)
     if(result.data && result.data.today && result.data.today.content){
       var todayLines=result.data.today.content.trim().split('\n');
       var hasRealData=todayLines.slice(1).some(function(line){
@@ -1373,9 +1302,8 @@ function autoFetchFromDrive(silent){
       processCRMCSV(result.data.crm.content);
       loaded.push('CRM');
     }
-    // Load historical CRM data (pre-aggregated YTD totals)
     if(result.data && result.data.crmHist && result.data.crmHist.content){
-      processCRMCSV(result.data.crmHist.content);  // accumulates on top of live data
+      processCRMCSV(result.data.crmHist.content);
       loaded.push('CRM History');
     }
     if(result.data && result.data.goals && result.data.goals.content){
@@ -1401,13 +1329,12 @@ function autoFetchFromDrive(silent){
       }
     } else {
       if(statusEl){
-        statusEl.textContent='Connected but no files found yet. Run createSampleFiles() in Apps Script.';
+        statusEl.textContent='Connected but no files found yet.';
         statusEl.style.color='var(--warn)';
       }
     }
   };
 
-  // Inject JSONP script tag
   var script=document.createElement('script');
   script.className='dd-jsonp-script';
   script.src=url+(url.indexOf('?')>=0?'&':'?')+'callback='+cbName+'&t='+Date.now();
@@ -1422,8 +1349,7 @@ function autoFetchFromDrive(silent){
   document.head.appendChild(script);
 }
 
-
-// ── CSV processors (shared by manual upload and Drive sync) ──
+// ── CSV processors ──
 function processSalesCSV(text){
   parseCSV(text).forEach(function(row){
     var idx=matchRep(row['rep']||row['name']||row['sales_rep']);if(idx===-1)return;
@@ -1435,13 +1361,11 @@ function processSalesCSV(text){
       quotes:parseInt(row['quotes'])||0,
       orders:parseInt(row['orders'])||0,
       existing:cn(row['existing']||row['existing_$']||row['existing_pct']),
-      newbiz:cn(row['new_biz']||row['new']||row['new_$']||row['new_biz_pct']),
+      newbiz:cn(row['new_biz']||row['newbiz']||row['new_$']||row['new_biz_pct']),
       existingIsPct:(function(){
         var ev=row['existing']||row['existing_$']||'';
         var nv=row['new_biz']||row['newbiz']||'';
-        // Explicit % sign
         if(ev.toString().indexOf('%')>=0) return true;
-        // Both values <=100 and sum to ~100 = percentages
         var en=parseFloat(ev)||0, nn=parseFloat(nv)||0;
         if(en<=100&&nn<=100&&Math.abs(en+nn-100)<1&&(en+nn)>0) return true;
         return false;
@@ -1457,12 +1381,10 @@ function processCRMCSV(text){
   var rows=parseCSV(text);
   if(!rows.length) return;
 
-  // Detect format: raw Zapier/Copper (has activity_type column) vs pre-aggregated
   var firstRow=rows[0];
   var isRaw=(firstRow['activity_type']!==undefined||firstRow['activity type']!==undefined);
 
   if(isRaw){
-    // Raw format — one row per activity, aggregate into counts per rep per day
     var buckets={};
     rows.forEach(function(row){
       var repName=row['rep']||row['name']||row['user name']||row['assigned to']||'';
@@ -1471,13 +1393,11 @@ function processCRMCSV(text){
       var key=rowKey(idx,d);
       if(!buckets[key]) buckets[key]={repIdx:idx,date:d,acv:0,dpv:0,acc:0,dpc:0};
       var type=(row['activity_type']||row['activity type']||'').toLowerCase().trim();
-      // Match activity types flexibly (with or without trailing s)
       if(type.indexOf('active customer')>=0&&(type.indexOf('visit')>=0))           buckets[key].acv++;
       else if((type.indexOf('dormant')>=0||type.indexOf('prospect')>=0)&&(type.indexOf('visit')>=0)) buckets[key].dpv++;
       else if(type.indexOf('active customer')>=0&&(type.indexOf('call')>=0))       buckets[key].acc++;
       else if((type.indexOf('dormant')>=0||type.indexOf('prospect')>=0)&&(type.indexOf('call')>=0))  buckets[key].dpc++;
     });
-    // Merge into crmRows — accumulate on existing rows
     Object.keys(buckets).forEach(function(key){
       var nr=buckets[key];
       var ei=crmRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===key;});
@@ -1487,7 +1407,6 @@ function processCRMCSV(text){
       } else { crmRows.push(nr); }
     });
   } else {
-    // Pre-aggregated format — one row per rep per day
     rows.forEach(function(row){
       var idx=matchRep(row['rep']||row['name']); if(idx===-1)return;
       var d=parseDate(row['date']); if(!d)return;
@@ -1499,7 +1418,6 @@ function processCRMCSV(text){
         dpc:parseInt(row['prospect_calls']||row['dpc'])||0};
       var ei=crmRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===key;});
       if(ei>=0){
-        // Accumulate — don't replace existing rows
         crmRows[ei].acv+=newRow.acv; crmRows[ei].dpv+=newRow.dpv;
         crmRows[ei].acc+=newRow.acc; crmRows[ei].dpc+=newRow.dpc;
       } else { crmRows.push(newRow); }
@@ -1510,8 +1428,6 @@ function processCRMCSV(text){
 function processGoalsCSV(text){
   parseCSV(text).forEach(function(row){
     var repName=(row['rep']||row['name']||'').trim().toLowerCase();
-
-    // Detect company row
     if(repName==='company'||repName==='total'||repName==='company total'){
       var cy=cn(row['yearly_goal']||row['goal']||row['annual_goal']);
       var cg=cn(row['gp_target']||row['gp%_target']);
@@ -1523,10 +1439,8 @@ function processGoalsCSV(text){
       if(cq) companyGoal.qtc=cq;
       if(ce) companyGoal.existing=ce;
       if(cnb) companyGoal.newBiz=cnb;
-      return; // don't process as a rep
+      return;
     }
-
-    // Company-wide fallback targets
     if(row['gp_target']||row['gp%_target']){
       var gv=cn(row['gp_target']||row['gp%_target']);
       if(gv) gpTarget=gv;
@@ -1553,7 +1467,6 @@ function processCRMGoalsCSV(text){
       dpc_q:parseInt(row['dpc_quarterly']||row['dpc_q'])||0};
   });
 }
-
 
 function init(){loadCfg();loadFromStorage();autoFetchFromDrive(true);render();}
 function toggleSidebar(){
