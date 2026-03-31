@@ -611,7 +611,7 @@ function getPeriodWindow(){
       return{start:todayStart,end:todayEnd,label:'Today',bars:['lastweek','today'],showCRM:'week'};
     case 'yesterday':{
       const ys=new Date(y,m,d-1,0,0,0),ye=new Date(y,m,d-1,23,59,59);
-      return{start:ys,end:ye,label:'Yesterday',bars:['lastweek','today'],showCRM:'period'};}
+      return{start:ys,end:ye,label:'Yesterday',bars:['lastweek','today'],showCRM:'week'};}
     case 'this_week':
       return{start:wStart,end:wEnd,label:'This Week',bars:['lastweek','week'],showCRM:'week'};
     case 'last_week':{
@@ -619,10 +619,10 @@ function getPeriodWindow(){
       const le=new Date(ls);le.setDate(ls.getDate()+6);le.setHours(23,59,59);
       return{start:ls,end:le,label:'Last Week',bars:['lastweek','week'],showCRM:'period'};}
     case 'this_month':
-      return{start:startOf(y,m),end:endOf(y,m),label:now.toLocaleString('default',{month:'long'}),bars:['lastweek','month'],showCRM:'period'};
+      return{start:startOf(y,m),end:endOf(y,m),label:now.toLocaleString('default',{month:'long'}),bars:['lastweek','month'],showCRM:'week'};
     case 'last_month':{
       const lm=m===0?11:m-1, ly=m===0?y-1:y;
-      return{start:startOf(ly,lm),end:endOf(ly,lm),label:new Date(ly,lm,1).toLocaleString('default',{month:'long'})+' '+ly,bars:['lastweek','month'],showCRM:'period'};}
+      return{start:startOf(ly,lm),end:endOf(ly,lm),label:new Date(ly,lm,1).toLocaleString('default',{month:'long'})+' '+ly,bars:['lastweek','month'],showCRM:'week'};}
     case 'this_quarter':
       return{start:startOf(y,curQStartMonth),end:endOf(y,curQStartMonth+2),label:getQtrLabel(now)+' '+y,bars:['lastweek','week','month','quarter'],showCRM:'both',qtr:getQtrLabel(now)};
     case 'last_quarter':{
@@ -840,19 +840,12 @@ function aggSales(idx){
   const lwStart=new Date(getWeekStart(now));lwStart.setDate(lwStart.getDate()-7);
   const lwEnd=new Date(lwStart);lwEnd.setDate(lwStart.getDate()+6);lwEnd.setHours(23,59,59);
 
-  let existingSum=0, newbizSum=0;
   rows.forEach(row=>{
     if(inWindow(row.date,pw.start,pw.end)){
       sales+=row.sales;
       // Accumulate GP$ for weighted average (GP$ = sales * GP%)
       gpArr.push({sales:row.sales, gp:row.gp});
       if(!latest||row.date>latest.date)latest=row;
-      // Track existing/newbiz from latest non-zero row (YTD cumulative from NEW_vs_Existing)
-      // Daily sales rows have 0 for these — only YTD rows have real values
-      if(!row.existingIsPct&&(row.existing||row.newbiz)){
-        existingSum=row.existing||0;
-        newbizSum=row.newbiz||0;
-      }
     }
     // sub-period buckets (always current-period context)
     const rw=getWeekStart(row.date).getTime(),rm=row.date.getMonth(),ry=row.date.getFullYear(),rq=getQtr(row.date);
@@ -879,9 +872,8 @@ function aggSales(idx){
     // Backorders use latest (point-in-time snapshot)
     backorders:latest?latest.backorders:0,
     converted_sales:latest?latest.converted_sales:0,
-    // For $ amounts use accumulated period sum; for % use latest row × yearly
-    existing:(latest&&latest.existingIsPct?(y*(latest.existing/100)):(existingSum||0)),
-    newbiz:(latest&&latest.existingIsPct?(y*(latest.newbiz/100)):(newbizSum||0)),
+    existing:(latest?(latest.existingIsPct?(y*(latest.existing/100)):latest.existing):0),
+    newbiz:(latest?(latest.existingIsPct?(y*(latest.newbiz/100)):latest.newbiz):0),
   };
 }
 
@@ -1025,9 +1017,8 @@ function qtcCard(d,repIdx){
     +'<div class="pct-text" style="color:'+pc(p)+';margin-top:6px">'+p+'% of '+tgt+'% goal</div></div>';
 }
 
-function backorderCard(val,sub,repIdx){
-  const boClick=repIdx!==undefined?`onclick="setPage('bo_${repIdx}')" style="cursor:pointer"`:'';
-  return`<div class="backorder-card" ${boClick}><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div class="section-label" style="margin-bottom:0">&#128230; Backorder Pipeline</div><span class="badge badge-pipeline">PIPELINE</span></div>
+function backorderCard(val,sub){
+  return`<div class="backorder-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div class="section-label" style="margin-bottom:0">&#128230; Backorder Pipeline</div><span class="badge badge-pipeline">PIPELINE</span></div>
     <div class="big-num" style="color:var(--pipeline)">${fmt(val)}</div><div class="goal-text" style="margin-top:5px">${sub}</div></div>`;}
 
 function envCard(ex,nw,repIdx){
@@ -1062,15 +1053,14 @@ function envCard(ex,nw,repIdx){
 function crmSection(d,idx,pw){
   const qtr=pw.qtr||getQtrLabel(new Date());
   const qg=getCRMGoals(idx),wg=getCRMWeekly(idx,qtr);
-  const showBoth=pw.showCRM==='both', showWeekOnly=pw.showCRM==='week', showPeriod=pw.showCRM==='period';
+  const showBoth=pw.showCRM==='both', showWeekOnly=pw.showCRM==='week';
   // When showPeriod, use period totals as the primary bar (e.g. last week's CRM)
   const cw=showPeriod?d.acv_p:d.acv_w, cwg=showPeriod?Math.round(wg.acv_w):wg.acv_w;
-  const wLabel=showPeriod?pw.label||'Period':'This Week';
   const metrics=[
-    {label:'Active Customer Visits',w:showPeriod?d.acv_p:d.acv_w,wg:wg.acv_w,q:d.acv_q,qg:qg.acv_q,p:d.acv_p,icon:'&#127962;',wLabel},
-    {label:'Dormant/Prospect Visits',w:showPeriod?d.dpv_p:d.dpv_w,wg:wg.dpv_w,q:d.dpv_q,qg:qg.dpv_q,p:d.dpv_p,icon:'&#128682;',wLabel},
-    {label:'Active Customer Calls',w:showPeriod?d.acc_p:d.acc_w,wg:wg.acc_w,q:d.acc_q,qg:qg.acc_q,p:d.acc_p,icon:'&#128222;',wLabel},
-    {label:'Dormant/Prospect Calls',w:showPeriod?d.dpc_p:d.dpc_w,wg:wg.dpc_w,q:d.dpc_q,qg:qg.dpc_q,p:d.dpc_p,icon:'&#128242;',wLabel},
+    {label:'Active Customer Visits',w:d.acv_w,wg:wg.acv_w,q:d.acv_q,qg:qg.acv_q,p:d.acv_p,icon:'&#127962;'},
+    {label:'Dormant/Prospect Visits',w:d.dpv_w,wg:wg.dpv_w,q:d.dpv_q,qg:qg.dpv_q,p:d.dpv_p,icon:'&#128682;'},
+    {label:'Active Customer Calls',w:d.acc_w,wg:wg.acc_w,q:d.acc_q,qg:qg.acc_q,p:d.acc_p,icon:'&#128222;'},
+    {label:'Dormant/Prospect Calls',w:d.dpc_w,wg:wg.dpc_w,q:d.dpc_q,qg:qg.dpc_q,p:d.dpc_p,icon:'&#128242;'},
   ];
   const cards=metrics.map(m=>{
     const wp=pct(m.w,m.wg),qp=pct(m.q,m.qg);
@@ -1241,62 +1231,6 @@ function proratedGoal(yearlyGoal){
 }
 
 
-// ── BACKORDER DETAIL PAGE ──
-function renderBackorderDetail(repIdx){
-  const rep=REPS[repIdx];
-  const rows=backorderRows.filter(function(r){return r.rep===rep.name;})
-    .sort(function(a,b){return b.rem-a.rem;});
-
-  const total=rows.reduce(function(a,r){return a+r.rem;},0);
-
-  let tableRows='';
-  rows.forEach(function(r){
-    tableRows+=`<tr>
-      <td style="color:var(--accent);font-weight:700">${r.so}</td>
-      <td>${r.cust}</td>
-      <td style="color:var(--muted);font-size:10px">${r.date}</td>
-      <td><span style="font-size:9px;padding:2px 6px;border-radius:10px;background:${r.status==='Issued'?'rgba(0,212,170,0.15)':'rgba(245,158,11,0.15)'};color:${r.status==='Issued'?'var(--accent)':'var(--warn)'}">${r.status}</span></td>
-      <td class="right" style="color:var(--muted)">${fmt(r.ord)}</td>
-      <td class="right" style="color:var(--accent);font-weight:700">${fmt(r.rem)}</td>
-      <td style="color:var(--muted);font-size:10px">${r.sp}</td>
-    </tr>`;
-  });
-
-  return`<div class="page-header-row">
-    <div class="rep-header">
-      <div class="rep-avatar-lg" style="background:${rep.color}">${rep.avatar}</div>
-      <div>
-        <div class="rep-name">${rep.name}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">Backorder Pipeline</div>
-      </div>
-    </div>
-    <button onclick="setPage('rep_${repIdx}')" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px">← Back</button>
-  </div>
-  <div class="card" style="margin-bottom:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <div style="font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Total Pipeline</div>
-      <div style="font-size:22px;font-weight:900;color:var(--accent)">${fmt(total)}</div>
-    </div>
-    <div style="font-size:11px;color:var(--muted)">${rows.length} open orders — sorted by remaining $ (largest first)</div>
-  </div>
-  ${rows.length===0?`<div class="card" style="text-align:center;color:var(--muted);padding:40px">No open backorders</div>`:`
-  <div class="card" style="padding:0;overflow:hidden">
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
-      <thead>
-        <tr style="background:rgba(255,255,255,0.04)">
-          <th style="padding:12px 14px;text-align:left;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">SO#</th>
-          <th style="padding:12px 14px;text-align:left;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Customer</th>
-          <th style="padding:12px 14px;text-align:left;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Date</th>
-          <th style="padding:12px 14px;text-align:left;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Status</th>
-          <th style="padding:12px 14px;text-align:right;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Ordered</th>
-          <th style="padding:12px 14px;text-align:right;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Remaining</th>
-          <th style="padding:12px 14px;text-align:left;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Salesperson</th>
-        </tr>
-      </thead>
-      <tbody>${tableRows}</tbody>
-    </table>
-  </div>`}`;
-}
 
 function renderRep(idx){
   const pw=getPeriodWindow();
@@ -1314,7 +1248,7 @@ function renderRep(idx){
     ${!hasLiveData?'<div class="sample-notice">&#9888; Showing sample data &mdash; upload CSVs via sidebar.</div>':''}
     ${salesMultiBar(d,idx,pw)}
     <div class="card-grid-2">${gpCard(d,idx)}${qtcCard(d,idx)}</div>
-    ${backorderCard(d.backorders,null,idx)}
+    ${backorderCard(d.backorders,null)}
     ${envCard(d.existing,d.newbiz,idx)}
     ${crmSection(d,idx,pw)}`;}
 
@@ -1359,8 +1293,6 @@ function render(){
   var content='';
   if(page==='company'){
     content=renderCompany();
-  } else if(page.startsWith('bo_')){
-    content=renderBackorderDetail(parseInt(page.split('_')[1]));
   } else {
     content=renderRep(parseInt(page));
   }
@@ -1420,11 +1352,6 @@ function autoFetchFromDrive(silent){
       salesRows=[];
       processSalesCSV(result.data.sales.content);
       loaded.push('Sales ('+result.data.sales.lastModified.slice(0,10)+')');
-    }
-    // Backorder detail rows
-    if(result.data && result.data.backorderDetail && result.data.backorderDetail.content){
-      backorderRows=result.data.backorderDetail.content;
-      loaded.push('Backorders ('+backorderRows.length+' lines)');
     }
     // today.csv — current day's hourly Fishbowl data, merges on top of sales.csv history
     // Only process if file has actual sales data (skip zero/weekend exports)
@@ -1628,16 +1555,7 @@ function processCRMGoalsCSV(text){
 }
 
 
-function init(){
-  loadCfg();
-  loadFromStorage();
-  autoFetchFromDrive(true);
-  render();
-  // Auto-refresh every 5 minutes silently in background
-  setInterval(function(){
-    autoFetchFromDrive(false);
-  }, 5 * 60 * 1000);
-}
+function init(){loadCfg();loadFromStorage();autoFetchFromDrive(true);render();}
 function toggleSidebar(){
   const sb=document.querySelector('.sidebar'),btn=document.getElementById('sb-toggle');
   sb.classList.toggle('collapsed');
