@@ -790,6 +790,16 @@ function aggSales(idx){
   const rows=salesRows.filter(r=>r.repIdx===idx);
   if(!rows.length)return null;
 
+  // Identify the YTD snapshot row — it's the earliest-dated row for this rep.
+  // sales.csv contains one cumulative YTD row (e.g. 3/20) followed by individual
+  // daily rows. The snapshot must be included in yearly total but excluded from
+  // weekly/monthly/quarterly sub-buckets (which should only reflect daily rows).
+  const minDate=new Date(Math.min(...rows.map(r=>r.date.getTime())));
+  const maxDate=new Date(Math.max(...rows.map(r=>r.date.getTime())));
+  // A row is the YTD snapshot if it's the earliest date AND there are newer daily rows
+  const hasMultipleDates=minDate.getTime()!==maxDate.getTime();
+  const snapshotDate=hasMultipleDates?minDate:null; // null = all rows are daily, no snapshot
+
   let sales=0, gpArr=[], latest=null;
   let w=0,lw=0,m=0,q=0,y=0;
   const now=new Date();
@@ -798,17 +808,27 @@ function aggSales(idx){
   const lwEnd=new Date(lwStart);lwEnd.setDate(lwStart.getDate()+6);lwEnd.setHours(23,59,59);
 
   rows.forEach(row=>{
+    // isSnapshot: true if this row is the cumulative YTD summary row
+    const isSnapshot=snapshotDate&&row.date.getTime()===snapshotDate.getTime();
+
     if(inWindow(row.date,pw.start,pw.end)){
       sales+=row.sales;
       gpArr.push({sales:row.sales, gp:row.gp});
       if(!latest||row.date>latest.date)latest=row;
     }
     const rw=getWeekStart(row.date).getTime(),rm=row.date.getMonth(),ry=row.date.getFullYear(),rq=getQtr(row.date);
-    if(rw===curW) w+=row.sales;
-    if(inWindow(row.date,lwStart,lwEnd)) lw+=row.sales;
-    if(ry===curY&&rq===curQ&&rm===curM) m+=row.sales;
-    if(ry===curY&&rq===curQ) q+=row.sales;
+    // Yearly always includes everything (snapshot + daily rows)
     if(ry===curY) y+=row.sales;
+    // Quarterly: include snapshot if it falls in the current quarter (it covers
+    // cumulative YTD through that quarter), plus all daily rows in current quarter
+    if(ry===curY&&rq===curQ) q+=row.sales;
+    // Weekly, last-week, monthly: exclude the YTD snapshot — these should only
+    // reflect actual individual-day activity rows
+    if(!isSnapshot){
+      if(rw===curW) w+=row.sales;
+      if(inWindow(row.date,lwStart,lwEnd)) lw+=row.sales;
+      if(ry===curY&&rq===curQ&&rm===curM) m+=row.sales;
+    }
   });
 
   const weightedGP=function(arr){
