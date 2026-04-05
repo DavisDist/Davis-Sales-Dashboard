@@ -622,7 +622,11 @@ function logout(){localStorage.removeItem('auth');location.reload();}
 if(localStorage.getItem('auth')==='1'){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  window.addEventListener('DOMContentLoaded',init);
+  if(document.readyState==='loading'){
+    window.addEventListener('DOMContentLoaded',init);
+  } else {
+    init();
+  }
 }
 
 // ══ PANEL TOGGLE ══
@@ -1506,6 +1510,11 @@ function init(){
   var splash=document.getElementById('splash-screen');
   if(splash) splash.style.display='none';
 }
+// Safety net — hide splash after 3 seconds no matter what
+setTimeout(function(){
+  var splash=document.getElementById('splash-screen');
+  if(splash) splash.style.display='none';
+}, 3000);
 function toggleSidebar(){
   const sb=document.querySelector('.sidebar'),btn=document.getElementById('sb-toggle');
   sb.classList.toggle('collapsed');
