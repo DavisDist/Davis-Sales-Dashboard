@@ -16,7 +16,7 @@
   :root {
     --bg:#060b14; --surface:#0d1623; --surface2:#111d2e;
     --border:rgba(255,255,255,0.07); --accent:#00d4aa; --accent2:#0ea5e9;
-    --warn:#f59e0b; --danger:#f43f5e; --text:#e2eaf5; --muted:#64748b;
+    --warn:#f59e0b; --danger:#f43f5e; --text:#e2eaf5; --muted:#a0aec0;
     --pipeline:#22c55e;
     --mono:'JetBrains Mono',monospace; --sans:'Syne',sans-serif;
   }
@@ -227,8 +227,10 @@
     .sidebar-logo-wrap{display:none !important;}
     .sidebar-toggle{display:none !important;}
     .sidebar-icon-strip{display:flex !important;flex-direction:column;align-items:center;padding:8px 0;gap:2px;width:52px;}
-    .sidebar-header{justify-content:center;min-height:auto;padding:8px 0;}
-    .main{padding:12px 10px;min-width:0;}
+    /* Push icon strip down to clear iPhone notch/camera */
+    .sidebar-header{justify-content:center;min-height:auto;padding-top:max(44px, env(safe-area-inset-top, 44px));padding-bottom:8px;}
+    /* Push main content top clear of notch */
+    .main{padding:12px 10px;padding-top:max(16px, env(safe-area-inset-top, 16px));min-width:0;}
     .card{padding:14px 12px;}
     .backorder-card{padding:14px 12px;}
     .card-grid-2,.crm-grid{grid-template-columns:1fr;gap:10px;}
@@ -599,15 +601,15 @@ function getPeriodWindow(){
 // ══ AUTH ══
 function tryLogin(){
   if(document.getElementById('pw-input').value===PASSWORD){
-    sessionStorage.setItem('auth','1');
+    localStorage.setItem('auth','1');
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='block';
     init();
   }else{document.getElementById('login-error').textContent='Incorrect password.';document.getElementById('pw-input').value='';}
 }
 document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin();});
-function logout(){sessionStorage.removeItem('auth');location.reload();}
-if(sessionStorage.getItem('auth')==='1'){
+function logout(){localStorage.removeItem('auth');location.reload();}
+if(localStorage.getItem('auth')==='1'){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   window.addEventListener('DOMContentLoaded',init);
