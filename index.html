@@ -817,29 +817,30 @@ function aggSales(idx){
   const snapshotDate=hasMultipleDates?minDate:null; // null = all rows are daily, no snapshot
 
   let sales=0, gpArr=[], latest=null;
-  let w=0,lw=0,m=0,q=0,y=0;
+  let w=0,lw=0,m=0,q=0,y=0,m1=0,m2=0,m3=0;
   const now=new Date();
   const curW=getWeekStart(now).getTime(), curM=now.getMonth(), curY=now.getFullYear(), curQ=getQtr(now);
   const lwStart=new Date(getWeekStart(now));lwStart.setDate(lwStart.getDate()-7);
   const lwEnd=new Date(lwStart);lwEnd.setDate(lwStart.getDate()+6);lwEnd.setHours(23,59,59);
+  const pwQ=pw.qtr?parseInt(pw.qtr.replace('Q','')):(curQ);
+  const pwQStartMonth=(pwQ-1)*3;
 
   rows.forEach(row=>{
-    // isSnapshot: true if this row is the cumulative YTD summary row
     const isSnapshot=snapshotDate&&row.date.getTime()===snapshotDate.getTime();
-
     if(inWindow(row.date,pw.start,pw.end)){
       sales+=row.sales;
       gpArr.push({sales:row.sales, gp:row.gp});
       if(!latest||row.date>latest.date)latest=row;
+      if(!isSnapshot){
+        const rm2=row.date.getMonth();
+        if(rm2===pwQStartMonth)   m1+=row.sales;
+        if(rm2===pwQStartMonth+1) m2+=row.sales;
+        if(rm2===pwQStartMonth+2) m3+=row.sales;
+      }
     }
     const rw=getWeekStart(row.date).getTime(),rm=row.date.getMonth(),ry=row.date.getFullYear(),rq=getQtr(row.date);
-    // Yearly always includes everything (snapshot + daily rows)
     if(ry===curY) y+=row.sales;
-    // Quarterly: include snapshot if it falls in the current quarter (it covers
-    // cumulative YTD through that quarter), plus all daily rows in current quarter
     if(ry===curY&&rq===curQ) q+=row.sales;
-    // Weekly, last-week, monthly: exclude the YTD snapshot — these should only
-    // reflect actual individual-day activity rows
     if(!isSnapshot){
       if(rw===curW) w+=row.sales;
       if(inWindow(row.date,lwStart,lwEnd)) lw+=row.sales;
@@ -855,7 +856,7 @@ function aggSales(idx){
   };
   return{
     periodSales:sales, gp:weightedGP(gpArr),
-    w,lw,m,q,y,
+    w,lw,m,q,y,m1,m2,m3,
     qtc_quotes:latest?latest.quotes:0, qtc_orders:latest?latest.orders:0,
     backorders:latest?latest.backorders:0,
     converted_sales:latest?latest.converted_sales:0,
@@ -937,6 +938,12 @@ function salesMultiBar(d, idx, pw){
   const {wg,mg,qg,yg,wd,weeks,q} = g;
   const qLbl=`${q} &middot; ${Math.round((Q_WEIGHTS[q]||0.28)*100)}% of yr`;
 
+  // Month names for quarterly breakdown
+  const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const pwQ=pw.qtr?parseInt(pw.qtr.replace('Q','')):(getQtr(new Date()));
+  const qm0=(pwQ-1)*3; // first month of quarter
+  const isQtrView=['this_quarter','last_quarter'].includes(viewPeriod);
+
   const bars = pw.bars || ['lastweek','week','month','quarter','year'];
   const allRows=[
     {key:'lastweek', label:'Last Week', val:d.lw||0, goal:wg, muted:true},
@@ -945,7 +952,42 @@ function salesMultiBar(d, idx, pw){
     {key:'quarter',label:qLbl,    val:d.q, goal:qg},
     {key:'year',  label:'Yearly',  val:d.y, goal:yg},
   ];
-  const visRows = allRows.filter(r=>bars.includes(r.key));
+  // Build visible rows based on selected period
+  var visRows;
+  if(isQtrView){
+    // Quarter: show Jan/Feb/Mar (or Q2 months) + quarter total
+    visRows=[
+      {key:'m1', label:MONTH_NAMES[qm0],   val:d.m1||0, goal:mg},
+      {key:'m2', label:MONTH_NAMES[qm0+1], val:d.m2||0, goal:mg},
+      {key:'m3', label:MONTH_NAMES[qm0+2], val:d.m3||0, goal:mg},
+      {key:'quarter', label:qLbl,           val:d.periodSales, goal:qg},
+    ];
+  } else if(viewPeriod==='last_week'){
+    // Last week: single bar showing last week total vs weekly goal
+    visRows=[
+      {key:'lw', label:'Last Week', val:d.periodSales, goal:wg},
+    ];
+  } else if(viewPeriod==='last_month'){
+    // Last month: single bar showing last month total vs monthly goal
+    var lmLabel=pw.label||'Last Month';
+    visRows=[
+      {key:'lm', label:lmLabel, val:d.periodSales, goal:mg},
+    ];
+  } else if(viewPeriod==='yesterday'){
+    // Yesterday: single bar showing yesterday total vs daily goal (weekly/5)
+    var dgGoal=Math.round(wg/5);
+    visRows=[
+      {key:'yd', label:'Yesterday', val:d.periodSales, goal:dgGoal},
+    ];
+  } else if(viewPeriod==='today'){
+    // Today: single bar showing today total vs daily goal
+    var dgGoal2=Math.round(wg/5);
+    visRows=[
+      {key:'td', label:'Today', val:d.periodSales, goal:dgGoal2},
+    ];
+  } else {
+    visRows = allRows.filter(r=>bars.includes(r.key));
+  }
   const showPeriod = !['ytd','this_week','this_month','this_quarter'].includes(viewPeriod);
 
   return `<div class="card"><div class="section-label">Total Sales vs. Sales Goal</div>
