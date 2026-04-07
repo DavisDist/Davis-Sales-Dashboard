@@ -977,17 +977,15 @@ function salesMultiBar(d, idx, pw){
       {key:'lm', label:lmLabel, val:d.periodSales, goal:mg},
     ];
   } else if(viewPeriod==='yesterday'){
-    // Yesterday: single bar showing yesterday total vs daily goal (weekly/5)
     var dgGoal=Math.round(wg/5);
-    visRows=[
-      {key:'yd', label:'Yesterday', val:d.periodSales, goal:dgGoal},
-    ];
+    visRows=[{key:'yd', label:'Yesterday', val:d.periodSales, goal:dgGoal}];
   } else if(viewPeriod==='today'){
-    // Today: single bar showing today total vs daily goal
     var dgGoal2=Math.round(wg/5);
-    visRows=[
-      {key:'td', label:'Today', val:d.periodSales, goal:dgGoal2},
-    ];
+    visRows=[{key:'td', label:'Today', val:d.periodSales, goal:dgGoal2}];
+  } else if(viewPeriod==='this_month'){
+    visRows=[{key:'month', label:pw.label||'This Month', val:d.periodSales, goal:mg}];
+  } else if(viewPeriod==='this_week'){
+    visRows=[{key:'week', label:'This Week', val:d.periodSales, goal:wg}];
   } else {
     visRows = allRows.filter(r=>bars.includes(r.key));
   }
@@ -1224,6 +1222,10 @@ function renderCompany(){
     visSalesRows=[{key:'yd',label:'Yesterday',val:compD.periodSales,goal:Math.round(cg.wg/5)}];
   } else if(viewPeriod==='today'){
     visSalesRows=[{key:'td',label:'Today',val:compD.periodSales,goal:Math.round(cg.wg/5)}];
+  } else if(viewPeriod==='this_month'){
+    visSalesRows=[{key:'month',label:pw.label||'This Month',val:compD.periodSales,goal:cg.mg}];
+  } else if(viewPeriod==='this_week'){
+    visSalesRows=[{key:'week',label:'This Week',val:compD.periodSales,goal:cg.wg}];
   } else {
     const compBars=pw.bars?['lastweek',...pw.bars]:['lastweek','week','month','quarter','year'];
     const allSalesRows=[
