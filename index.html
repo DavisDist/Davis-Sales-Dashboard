@@ -774,7 +774,10 @@ function clearAllData(){
   updateStorageSummary();
   render();
 }
-function stamp(){document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();}
+function stamp(){
+  var t='Updated '+new Date().toLocaleTimeString();
+  document.getElementById('last-updated').textContent=t;
+}
 
 // ══ GOAL MATH ══
 const FALLBACK_GOALS=[1420000,1120000,1420000,1020000,1720000,1220000,980000];
@@ -1221,9 +1224,17 @@ function renderCompany(){
     }).join('')}
   </div>`;
 
+  var syncTime=document.getElementById('last-updated').textContent||'Not synced yet';
   return`<div class="page-header-row">
       <div class="page-heading">Company Total</div>
       <div style="display:flex;align-items:center;gap:10px">${periodSelector('sel-company')}<span class="period-badge">${pw.label}</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;">
+        <span style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;">Last Sync</span>
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);">${syncTime}</span>
+        <button onclick="autoFetchFromDrive(false)" style="padding:3px 8px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:5px;color:var(--accent);font-family:var(--sans);font-size:10px;font-weight:700;cursor:pointer;">&#8635; Sync</button>
+      </div>
     </div>
     ${!hasLiveData?'<div class="sample-notice">&#9888; Showing sample data &mdash; upload CSVs via sidebar to see live numbers.</div>':''}
     <div class="podium-row">${lastWeekPodium()}${weeklyPodium()}</div>
