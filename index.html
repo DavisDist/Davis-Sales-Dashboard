@@ -205,40 +205,53 @@ function zoneLabel(z) {
 }
 
 async function loadAsanaTasks() {
-  // Load all existing tasks from AR Collections project and match to customers by name
+  // Fetch all tasks from AR Collections project via Asana API directly
   try {
     const res = await fetch(ANTHROPIC_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        system: 'Fetch all incomplete tasks from Asana project ' + ASANA_PROJECT + '. Return ONLY a JSON array of objects: [{"name":"task name","gid":"123","url":"https://app.asana.com/..."}]. No other text.',
-        messages: [{ role: 'user', content: 'List all incomplete tasks in AR Collections project ' + ASANA_PROJECT }],
+        max_tokens: 3000,
+        system: `Use the Asana MCP to get all incomplete tasks in project ${ASANA_PROJECT}.
+Return ONLY a raw JSON array like this, with no markdown, no explanation, no code blocks:
+[{"gid":"123456","name":"CUSTOMER NAME - $1,000.00 - 45 days"}]
+Use the actual task GIDs and names from Asana. Nothing else.`,
+        messages: [{ role: 'user', content: `Get all incomplete tasks from Asana project ${ASANA_PROJECT} and return them as a JSON array with gid and name fields only.` }],
         mcp_servers: [{ type: 'url', url: ASANA_MCP, name: 'asana' }]
       })
     });
     const json = await res.json();
-    const text = json.content?.map(c => c.text||'').join('')||'';
-    let tasks = [];
-    try {
-      const clean = text.replace(/```json|```/g,'').trim();
-      tasks = JSON.parse(clean);
-    } catch { return; }
+    const text = (json.content||[]).map(c => c.text||'').join('').trim();
 
-    // Match tasks to customers by checking if task name starts with customer name
-    if (!DATA) return;
+    // Extract JSON array from response — handle markdown code blocks
+    let tasks = [];
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      try { tasks = JSON.parse(jsonMatch[0]); } catch { return; }
+    } else { return; }
+
+    if (!DATA || !tasks.length) return;
+
+    // Match each task to a customer — task name format is "CUSTOMER NAME - $X - Y days"
     tasks.forEach(t => {
-      const match = DATA.customers.find(c =>
-        t.name && t.name.toLowerCase().startsWith(c.name.toLowerCase().substring(0, 15))
-      );
+      if (!t.name || !t.gid) return;
+      // Extract customer name (everything before the first " - $")
+      const dashIdx = t.name.indexOf(' - $');
+      const taskCustName = dashIdx > 0 ? t.name.substring(0, dashIdx).toLowerCase().trim() : t.name.toLowerCase().trim();
+      const match = DATA.customers.find(c => {
+        const custName = c.name.toLowerCase().trim();
+        return custName === taskCustName ||
+               custName.startsWith(taskCustName.substring(0, Math.min(20, taskCustName.length))) ||
+               taskCustName.startsWith(custName.substring(0, Math.min(20, custName.length)));
+      });
       if (match && !asanaLinks[match.id]) {
-        asanaLinks[match.id] = t.url || `https://app.asana.com/0/${ASANA_PROJECT}/${t.gid}`;
+        asanaLinks[match.id] = `https://app.asana.com/0/${ASANA_PROJECT}/${t.gid}`;
         autoCreated.add(match.id);
       }
     });
     render();
-  } catch(e) { /* silent fail */ }
+  } catch(e) { console.error('loadAsanaTasks error:', e); }
 }
 
 async function loadData() {
@@ -465,9 +478,6 @@ function manualCreateTask(custId) {
   if (!cust) return;
   const el = document.getElementById('manual-task-status');
   if (el) el.innerHTML = '<span style="color:var(--muted);font-size:12px;">Creating task…</span>';
-  // Force re-create even if already created
-  autoCreated.delete(custId);
-  delete asanaLinks[custId];
   createAsanaTask(cust, 'manual');
 }
 
@@ -533,7 +543,7 @@ function nextBusinessDay() {
 async function createAsanaTask(cust, mode='auto') {
   const isManual = mode === 'manual';
   if (!isManual && autoCreated.has(cust.id)) return;
-  autoCreated.add(cust.id);
+  if (!isManual) autoCreated.add(cust.id);
 
   // Routing rules
   // Auto:   yellow → Yellow Zone section, Medium priority
