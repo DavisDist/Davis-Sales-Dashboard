@@ -561,7 +561,7 @@ function parseDate(s){
   const d=new Date(s);
   return isNaN(d.getTime())?null:d;
 }
-function getWeekStart(d){const dt=new Date(d);const day=dt.getDay();dt.setDate(dt.getDate()+(day===0?-6:1-day));dt.setHours(0,0,0,0);return dt;}
+function getWeekStart(d){const dt=new Date(d);const day=dt.getDay();dt.setDate(dt.getDate()-day);dt.setHours(0,0,0,0);return dt;}
 function getQtr(d){return Math.floor(d.getMonth()/3)+1;}
 function getQtrLabel(d){return'Q'+getQtr(d);}
 
