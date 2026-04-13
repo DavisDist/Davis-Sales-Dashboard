@@ -1078,20 +1078,23 @@ function crmSection(d,idx,pw){
   const qtr=pw.qtr||getQtrLabel(new Date());
   const qg=getCRMGoals(idx),wg=getCRMWeekly(idx,qtr);
   const showBoth=pw.showCRM==='both';
-  // Derive showPeriod locally — was the bug (referenced undefined outer variable)
-  const showPeriod = !['ytd','this_week','this_month','this_quarter'].includes(viewPeriod);
+  const isHistorical=['last_week','last_month','last_quarter','last_year','yesterday'].includes(viewPeriod);
+
+  // For historical periods use period totals (acv_p etc) vs weekly goal
+  // For current periods use weekly (acv_w) and optionally quarterly (acv_q)
   const metrics=[
-    {label:'Active Customer Visits',w:d.acv_w,wg:wg.acv_w,q:d.acv_q,qg:qg.acv_q,p:d.acv_p,icon:'&#127962;'},
-    {label:'Dormant/Prospect Visits',w:d.dpv_w,wg:wg.dpv_w,q:d.dpv_q,qg:qg.dpv_q,p:d.dpv_p,icon:'&#128682;'},
-    {label:'Active Customer Calls',w:d.acc_w,wg:wg.acc_w,q:d.acc_q,qg:qg.acc_q,p:d.acc_p,icon:'&#128222;'},
-    {label:'Dormant/Prospect Calls',w:d.dpc_w,wg:wg.dpc_w,q:d.dpc_q,qg:qg.dpc_q,p:d.dpc_p,icon:'&#128242;'},
+    {label:'Active Customer Visits', val:isHistorical?d.acv_p:d.acv_w, goal:wg.acv_w, q:d.acv_q, qg:qg.acv_q, icon:'&#127962;'},
+    {label:'Dormant/Prospect Visits',val:isHistorical?d.dpv_p:d.dpv_w, goal:wg.dpv_w, q:d.dpv_q, qg:qg.dpv_q, icon:'&#128682;'},
+    {label:'Active Customer Calls',  val:isHistorical?d.acc_p:d.acc_w, goal:wg.acc_w, q:d.acc_q, qg:qg.acc_q, icon:'&#128222;'},
+    {label:'Dormant/Prospect Calls', val:isHistorical?d.dpc_p:d.dpc_w, goal:wg.dpc_w, q:d.dpc_q, qg:qg.dpc_q, icon:'&#128242;'},
   ];
+  const periodLabel=isHistorical?pw.label:'Weekly';
   const cards=metrics.map(m=>{
-    const wp=pct(m.w,m.wg),qp=pct(m.q,m.qg);
+    const vp=pct(m.val,m.goal),qp=pct(m.q,m.qg);
     return`<div class="crm-card"><div class="metric-label">${m.icon} ${m.label}</div><div style="margin-top:10px">
-      <div class="crm-bar-row"><div class="crm-bar-label">Weekly</div><div class="crm-bar-wrap">${pb(m.w,m.wg,true)}</div><div class="crm-bar-num" style="color:${pc(wp)}">${m.w} / ${m.wg}</div></div>
-      <div style="font-size:10px;color:${pc(wp)};text-align:right;margin-bottom:${showBoth?'8px':'0'}">${wp}%</div>
-      ${showBoth?`<div class="crm-bar-row"><div class="crm-bar-label">Quarterly</div><div class="crm-bar-wrap">${pb(m.q,m.qg,true)}</div><div class="crm-bar-num" style="color:${pc(qp)}">${m.q} / ${m.qg}</div></div><div style="font-size:10px;color:${pc(qp)};text-align:right">${qp}%</div>`:''}
+      <div class="crm-bar-row"><div class="crm-bar-label">${periodLabel}</div><div class="crm-bar-wrap">${pb(m.val,m.goal,true)}</div><div class="crm-bar-num" style="color:${pc(vp)}">${m.val} / ${m.goal}</div></div>
+      <div style="font-size:10px;color:${pc(vp)};text-align:right;margin-bottom:${showBoth&&!isHistorical?'8px':'0'}">${vp}%</div>
+      ${showBoth&&!isHistorical?`<div class="crm-bar-row"><div class="crm-bar-label">Quarterly</div><div class="crm-bar-wrap">${pb(m.q,m.qg,true)}</div><div class="crm-bar-num" style="color:${pc(qp)}">${m.q} / ${m.qg}</div></div><div style="font-size:10px;color:${pc(qp)};text-align:right">${qp}%</div>`:''}
     </div></div>`;
   }).join('');
   return`<div style="margin-bottom:14px"><div class="section-label" style="margin-bottom:10px">Copper CRM Activity</div><div class="crm-grid">${cards}</div></div>`;}
@@ -1182,17 +1185,19 @@ function renderCompany(){
 
   const showBoth=pw.showCRM==='both';
   const showPeriod=!['ytd','this_week','this_month','this_quarter'].includes(viewPeriod);
+  const isHistoricalC=['last_week','last_month','last_quarter','last_year','yesterday'].includes(viewPeriod);
+  const periodLabelC=isHistoricalC?pw.label:'Weekly';
   const crmM=[
-    {label:'Active Customer Visits',w:compD.acv_w,wg:ccw.acv_w,q:compD.acv_q,qg:ccg.acv_q,icon:'&#127962;'},
-    {label:'Dormant/Prospect Visits',w:compD.dpv_w,wg:ccw.dpv_w,q:compD.dpv_q,qg:ccg.dpv_q,icon:'&#128682;'},
-    {label:'Active Customer Calls',w:compD.acc_w,wg:ccw.acc_w,q:compD.acc_q,qg:ccg.acc_q,icon:'&#128222;'},
-    {label:'Dormant/Prospect Calls',w:compD.dpc_w,wg:ccw.dpc_w,q:compD.dpc_q,qg:ccg.dpc_q,icon:'&#128242;'},
+    {label:'Active Customer Visits', val:isHistoricalC?compD.acv_p:compD.acv_w, goal:ccw.acv_w, q:compD.acv_q, qg:ccg.acv_q, icon:'&#127962;'},
+    {label:'Dormant/Prospect Visits',val:isHistoricalC?compD.dpv_p:compD.dpv_w, goal:ccw.dpv_w, q:compD.dpv_q, qg:ccg.dpv_q, icon:'&#128682;'},
+    {label:'Active Customer Calls',  val:isHistoricalC?compD.acc_p:compD.acc_w, goal:ccw.acc_w, q:compD.acc_q, qg:ccg.acc_q, icon:'&#128222;'},
+    {label:'Dormant/Prospect Calls', val:isHistoricalC?compD.dpc_p:compD.dpc_w, goal:ccw.dpc_w, q:compD.dpc_q, qg:ccg.dpc_q, icon:'&#128242;'},
   ];
-  const crmCards=crmM.map(m=>{const wp=pct(m.w,m.wg),qp=pct(m.q,m.qg);
+  const crmCards=crmM.map(m=>{const vp=pct(m.val,m.goal),qp=pct(m.q,m.qg);
     return`<div class="crm-card"><div class="metric-label">${m.icon} ${m.label}</div><div style="margin-top:10px">
-      <div class="crm-bar-row"><div class="crm-bar-label">Weekly</div><div class="crm-bar-wrap">${pb(m.w,m.wg,true)}</div><div class="crm-bar-num" style="color:${pc(wp)}">${m.w} / ${m.wg}</div></div>
-      <div style="font-size:10px;color:${pc(wp)};text-align:right;margin-bottom:${showBoth?'8px':'0'}">${wp}%</div>
-      ${showBoth?`<div class="crm-bar-row"><div class="crm-bar-label">Quarterly</div><div class="crm-bar-wrap">${pb(m.q,m.qg,true)}</div><div class="crm-bar-num" style="color:${pc(qp)}">${m.q} / ${m.qg}</div></div><div style="font-size:10px;color:${pc(qp)};text-align:right">${qp}%</div>`:''}
+      <div class="crm-bar-row"><div class="crm-bar-label">${periodLabelC}</div><div class="crm-bar-wrap">${pb(m.val,m.goal,true)}</div><div class="crm-bar-num" style="color:${pc(vp)}">${m.val} / ${m.goal}</div></div>
+      <div style="font-size:10px;color:${pc(vp)};text-align:right;margin-bottom:${showBoth&&!isHistoricalC?'8px':'0'}">${vp}%</div>
+      ${showBoth&&!isHistoricalC?`<div class="crm-bar-row"><div class="crm-bar-label">Quarterly</div><div class="crm-bar-wrap">${pb(m.q,m.qg,true)}</div><div class="crm-bar-num" style="color:${pc(qp)}">${m.q} / ${m.qg}</div></div><div style="font-size:10px;color:${pc(qp)};text-align:right">${qp}%</div>`:''}
     </div></div>`;}).join('');
 
   // Company sales card — uses same period-aware logic as rep salesMultiBar
