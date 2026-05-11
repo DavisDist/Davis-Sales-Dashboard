@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -271,6 +272,102 @@
   .sidebar.collapsed .sidebar-icon-strip{display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;width:52px;}
   .sidebar.collapsed .sidebar-section{display:none;}
   .sidebar.collapsed .sidebar-bottom{display:none;}
+
+  /* ── SANDBOX BANNER ── */
+  #sandbox-banner{position:fixed;top:0;left:0;right:0;z-index:8888;background:repeating-linear-gradient(
+    -45deg,#f59e0b,#f59e0b 10px,#1a0f00 10px,#1a0f00 20px);
+    padding:6px 0;text-align:center;font-size:11px;font-weight:800;letter-spacing:2px;
+    color:#fff;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.6);
+    box-shadow:0 2px 12px rgba(245,158,11,0.4);}
+  body:has(#sandbox-banner) .main{padding-top:56px !important;}
+  body:has(#sandbox-banner) .sidebar{padding-top:32px;}
+
+  /* ── LEAD BUTTON in sidebar ── */
+  .lead-nav-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;
+    border-radius:8px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.25);
+    color:var(--accent);font-family:var(--sans);font-size:12px;cursor:pointer;margin-bottom:2px;
+    margin-top:4px;transition:all .15s;font-weight:700;}
+  .lead-nav-btn:hover{background:rgba(0,212,170,0.16);border-color:var(--accent);}
+
+  /* ── LEAD MODAL ── */
+  #lead-modal-root{display:none;position:fixed;inset:0;z-index:9990;font-family:var(--sans);}
+  #lead-modal-root.open{display:block;}
+  .lm-overlay{position:absolute;inset:0;background:rgba(6,11,20,0.82);backdrop-filter:blur(4px);animation:lm-fade .2s ease;}
+  .lm-panel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:min(500px,92vw);max-height:90vh;overflow-y:auto;
+    background:#0d1623;border:1px solid rgba(0,212,170,0.2);
+    border-radius:16px;box-shadow:0 0 0 1px rgba(0,212,170,0.06),0 32px 80px rgba(0,0,0,0.7);
+    animation:lm-up .28s cubic-bezier(.34,1.56,.64,1);}
+  .lm-header{padding:26px 26px 18px;background:linear-gradient(135deg,#0a1520,#0d1f35);
+    border-bottom:1px solid rgba(255,255,255,0.06);position:sticky;top:0;z-index:2;}
+  .lm-eyebrow{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+    color:var(--accent);margin-bottom:5px;}
+  .lm-header h2{margin:0 0 3px;font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.3px;}
+  .lm-header p{margin:0;font-size:12px;color:var(--muted);}
+  .lm-close-btn{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.05);
+    border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:15px;
+    cursor:pointer;padding:3px 9px;transition:all .15s;}
+  .lm-close-btn:hover{color:var(--text);border-color:var(--muted);}
+  .lm-body{padding:22px 26px 8px;}
+  .lm-field{margin-bottom:16px;}
+  .lm-field label{display:block;font-size:10px;font-weight:700;letter-spacing:2px;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .lm-field label .req{color:var(--accent);}
+  .lm-field input,.lm-field textarea,.lm-sel{
+    width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);border-radius:8px;color:var(--text);
+    font-size:14px;padding:10px 13px;outline:none;font-family:var(--sans);
+    transition:border .2s,box-shadow .2s;}
+  .lm-field input::placeholder,.lm-field textarea::placeholder{color:rgba(160,174,192,0.4);}
+  .lm-field input:focus,.lm-field textarea:focus,.lm-sel:focus{
+    border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,170,0.1);}
+  .lm-field textarea{resize:vertical;min-height:80px;}
+  .lm-sel{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a0aec0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  .lm-sel option{background:#0d1623;}
+  .lm-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .lm-status-box{font-size:12px;border-radius:8px;padding:0;max-height:0;overflow:hidden;transition:all .25s;}
+  .lm-status-box.show{max-height:80px;padding:10px 13px;margin-bottom:12px;}
+  .lm-status-box.info{background:rgba(14,165,233,0.1);color:var(--accent2);border:1px solid rgba(14,165,233,0.2);}
+  .lm-status-box.warn{background:rgba(245,158,11,0.1);color:var(--warn);border:1px solid rgba(245,158,11,0.2);}
+  .lm-status-box.ok{background:rgba(0,212,170,0.1);color:var(--accent);border:1px solid rgba(0,212,170,0.2);}
+  .lm-status-box.err{background:rgba(244,63,94,0.1);color:var(--danger);border:1px solid rgba(244,63,94,0.2);}
+  .lm-footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 26px 22px;
+    position:sticky;bottom:0;background:#0d1623;border-top:1px solid rgba(255,255,255,0.06);z-index:2;}
+  .lm-btn-cancel{padding:9px 18px;background:none;border:1px solid var(--border);border-radius:8px;
+    color:var(--muted);font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .15s;}
+  .lm-btn-cancel:hover{border-color:var(--muted);color:var(--text);}
+  .lm-btn-submit{display:inline-flex;align-items:center;gap:7px;padding:9px 24px;
+    background:var(--accent);border:none;border-radius:8px;color:#001a14;
+    font-family:var(--sans);font-weight:800;font-size:13px;cursor:pointer;transition:all .15s;}
+  .lm-btn-submit:hover{opacity:.88;}
+  .lm-btn-submit:disabled{opacity:.45;cursor:not-allowed;}
+  .lm-spin{display:inline-block;animation:lm-spin .7s linear infinite;}
+  /* success screen */
+  .lm-success{display:none;flex-direction:column;align-items:center;text-align:center;padding:40px 26px 36px;}
+  .lm-success.show{display:flex;}
+  .lm-success-icon{font-size:54px;margin-bottom:14px;}
+  .lm-success h3{font-size:18px;font-weight:800;color:var(--accent);margin:0 0 8px;}
+  .lm-success p{font-size:13px;color:var(--muted);margin:0 0 22px;line-height:1.6;}
+  .lm-success button{padding:9px 24px;background:var(--accent);border:none;border-radius:8px;
+    color:#001a14;font-family:var(--sans);font-weight:800;font-size:13px;cursor:pointer;}
+
+  /* MOCK DEMO PANEL */
+  .mock-panel{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);
+    border-radius:10px;padding:14px 16px;margin:0 26px 16px;font-size:11px;}
+  .mock-panel-title{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+    color:var(--warn);margin-bottom:10px;}
+  .mock-scenario{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;
+    background:rgba(255,255,255,0.04);border:1px solid var(--border);margin-bottom:6px;
+    cursor:pointer;transition:all .15s;font-size:11px;color:var(--muted);}
+  .mock-scenario:hover{border-color:var(--warn);color:var(--text);}
+  .mock-scenario:last-child{margin-bottom:0;}
+  .mock-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+  @keyframes lm-fade{from{opacity:0}to{opacity:1}}
+  @keyframes lm-up{from{opacity:0;transform:translate(-50%,calc(-50% + 18px))}to{opacity:1;transform:translate(-50%,-50%)}}
+  @keyframes lm-spin{to{transform:rotate(360deg)}}
+
   .sidebar-toggle{position:absolute;top:50%;transform:translateY(-50%);right:-13px;width:26px;height:26px;
     background:var(--surface2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;
     justify-content:center;cursor:pointer;z-index:20;font-size:11px;color:var(--muted);transition:all .2s;user-select:none;}
@@ -343,6 +440,12 @@
         <div id="rep-nav"></div>
       </div>
 
+      <div class="sidebar-section">
+        <button class="lead-nav-btn" onclick="openLeadModal()">
+          <span style="font-size:15px">&#43;</span> Submit a Lead
+        </button>
+      </div>
+
       <div class="sidebar-bottom">
         <!-- UPLOAD -->
         <div class="panel-tab" id="upload-tab" onclick="togglePanel('upload')">
@@ -378,6 +481,13 @@
               <div class="file-status" id="st-crmgoals"></div>
             </div>
           </div>
+          <div class="upload-item">
+            <div class="upload-item-label">IP Sales — Sean / Zach / Zane</div>
+            <div class="upload-item-row">
+              <div class="file-input-wrapper"><div class="file-btn">Choose CSV</div><input type="file" accept=".csv" onchange="loadIPSales(this)"/></div>
+              <div class="file-status" id="st-ipsales"></div>
+            </div>
+          </div>
           <div class="csv-hint-mini">
             <strong style="color:var(--accent)">Auto-sync via Drive (recommended)</strong><br/>
             Configure in Settings &rarr; Google Drive URL. Dashboard fetches on every load.<br/><br/>
@@ -385,7 +495,8 @@
             <code>sales.csv</code>: rep, date, sales, gp_pct, quotes, orders, existing($ or %), new_biz($ or %), backorders, converted_sales<br/>
             <code>crm.csv</code>: rep, date, active_cust_visits, prospect_visits, active_cust_calls, prospect_calls<br/>
             <code>goals.csv</code>: rep, yearly_goal, gp_target, qtc_target, new_biz_pct_goal, existing_pct_goal<br/>
-            <code>crm_goals.csv</code>: rep, acv_quarterly, dpv_quarterly, acc_quarterly, dpc_quarterly
+            <code>crm_goals.csv</code>: rep, acv_quarterly, dpv_quarterly, acc_quarterly, dpc_quarterly<br/>
+            <code>ip_sales.csv</code>: rep, date, sales, gp_pct &mdash; Sean / Zach / Zane only
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;"><div class="last-updated" id="last-updated"></div><button onclick="autoFetchFromDrive(false)" style="padding:4px 9px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:6px;color:var(--accent);font-family:var(--sans);font-size:10px;font-weight:700;cursor:pointer;" title="Sync from Google Drive now">&#8635; Sync Drive</button></div>
           <div id="storage-summary" style="font-size:9px;color:var(--muted);margin-top:3px;font-family:var(--mono);">No data saved</div>
@@ -404,6 +515,12 @@
             <input id="cfg-drive-url" type="text" placeholder="https://script.google.com/macros/s/..." 
               style="width:100%;padding:5px 7px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:8px;outline:none;margin-bottom:5px;"/>
             <div id="sync-status" style="font-size:9px;font-family:var(--mono);color:var(--muted);min-height:14px;"></div>
+          </div>
+          <div class="settings-group">
+            <div class="settings-group-label">Asana Integration</div>
+            <div style="font-size:9px;color:var(--muted);margin-bottom:7px;line-height:1.5;">Paste your Asana Personal Access Token to enable lead creation.</div>
+            <input id="cfg-asana-pat" type="password" placeholder="2/xxxx:xxxx"
+              style="width:100%;padding:5px 7px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:8px;outline:none;margin-bottom:5px;"/>
           </div>
           <div class="settings-group">
             <div class="settings-group-label">Working Days Per Quarter</div>
@@ -443,10 +560,13 @@ function loadCfg(){
   document.getElementById('cfg-wd-q3').value=cfg.wd.Q3;
   document.getElementById('cfg-wd-q4').value=cfg.wd.Q4;
   if(cfg.driveUrl) document.getElementById('cfg-drive-url').value=cfg.driveUrl;
+  if(cfg.asanaPat) document.getElementById('cfg-asana-pat').value=cfg.asanaPat;
 }
 function saveSettings(){
   cfg.wd={Q1:parseInt(document.getElementById('cfg-wd-q1').value)||63,Q2:parseInt(document.getElementById('cfg-wd-q2').value)||64,Q3:parseInt(document.getElementById('cfg-wd-q3').value)||63,Q4:parseInt(document.getElementById('cfg-wd-q4').value)||61};
   cfg.driveUrl=(document.getElementById('cfg-drive-url').value||'').trim();
+  cfg.asanaPat=(document.getElementById('cfg-asana-pat').value||'').trim();
+  ASANA_PAT=cfg.asanaPat;
   try{ localStorage.setItem('dd_cfg2',JSON.stringify(cfg)); }catch(e){}
   const btn=document.querySelector('.settings-save-btn');
   btn.textContent='&#10003; Saved!'; setTimeout(()=>{ btn.innerHTML='&#10003; Save Settings'; },2000);
@@ -457,14 +577,70 @@ const REPS = [
   {name:"Desia Anderson",  avatar:"DA", color:"#0ea5e9"},
   {name:"Dan Dalton",      avatar:"DD", color:"#8b5cf6"},
   {name:"Chase Martin",    avatar:"CM", color:"#f59e0b"},
-  {name:"Sean Mendenhall", avatar:"SM", color:"#ec4899"},
-  {name:"Zach Alvey",      avatar:"ZA", color:"#00d4aa"},
+  {name:"Sean Mendenhall", avatar:"SM", color:"#ec4899", hasIP:true},
+  {name:"Zach Alvey",      avatar:"ZA", color:"#00d4aa", hasIP:true},
   {name:"Ryan Alvey",      avatar:"RA", color:"#f43f5e"},
   {name:"Davis House",     avatar:"DH", color:"#6366f1"},
+  {name:"Jake Perry",      avatar:"JP", color:"#10b981"},
+  {name:"Zane Anderson",   avatar:"ZN", color:"#f97316", ipOnly:true},
 ];
 
+// ══ REP GOALS CONFIG ══
+// Edit quarterly sales goals, CRM weekly goals, and lagging KPI targets here.
+// qGoals: exact quarterly $ goals (from Excel). crm: weekly activity goals.
+// hasIP:true = rep also tracks IP sales. ipOnly:true = only IP sales shown (no regular sales goal).
+const REP_GOALS = {
+  // ── Edit quarterly goals, CRM weekly targets, and lagging KPI % here ──
+  // Values sourced from "2026 KPIs & Sales Goals.xlsx"
+  0: { // Desia Anderson
+    qGoals:{Q1:331771,  Q2:464480,  Q3:464480,  Q4:398125},
+    gpm:21.95, qtc:64, existing:85, newBiz:15,
+    crm:{acv_w:4, dpv_w:1, acc_w:15, dpc_w:10}
+  },
+  1: { // Dan Dalton
+    qGoals:{Q1:307593,  Q2:430630,  Q3:430630,  Q4:369112},
+    gpm:30.86, qtc:64, existing:90, newBiz:10,
+    crm:{acv_w:0, dpv_w:0, acc_w:0,  dpc_w:0}
+  },
+  2: { // Chase Martin
+    qGoals:{Q1:414593,  Q2:580430,  Q3:580430,  Q4:497511},
+    gpm:32.03, qtc:64, existing:75, newBiz:25,
+    crm:{acv_w:3, dpv_w:3, acc_w:6,  dpc_w:6}
+  },
+  3: { // Sean Mendenhall  (hasIP:true on REPS entry)
+    qGoals:{Q1:239217,  Q2:334904,  Q3:334904,  Q4:287060},
+    gpm:27.09, qtc:64, existing:95, newBiz:5,
+    crm:{acv_w:0, dpv_w:0, acc_w:20, dpc_w:5}
+  },
+  4: { // Zach Alvey  (hasIP:true on REPS entry — Q1 is intentionally front-loaded)
+    qGoals:{Q1:383335,  Q2:275000,  Q3:265000,  Q4:255000},
+    gpm:27.58, qtc:64, existing:95, newBiz:5,
+    crm:{acv_w:0, dpv_w:0, acc_w:5,  dpc_w:1}
+  },
+  5: { // Ryan Alvey
+    qGoals:{Q1:228977,  Q2:320568,  Q3:320568,  Q4:274773},
+    gpm:24.28, qtc:64, existing:75, newBiz:25,
+    crm:{acv_w:15, dpv_w:10, acc_w:15, dpc_w:12}
+  },
+  6: { // Davis House
+    qGoals:{Q1:168541,  Q2:235957,  Q3:235957,  Q4:202249},
+    gpm:26.00, qtc:64, existing:45, newBiz:55,
+    crm:{acv_w:0, dpv_w:0, acc_w:0,  dpc_w:0}
+  },
+  7: { // Jake Perry
+    qGoals:{Q1:265000,  Q2:245000,  Q3:245000,  Q4:235000},
+    gpm:27.58, qtc:64, existing:95, newBiz:5,
+    crm:{acv_w:15, dpv_w:10, acc_w:15, dpc_w:12}
+  },
+  8: { // Zane Anderson  (ipOnly:true on REPS entry — no regular sales goals)
+    qGoals:{Q1:0, Q2:0, Q3:0, Q4:0},
+    gpm:27.09, qtc:64, existing:95, newBiz:5,
+    crm:{acv_w:0, dpv_w:0, acc_w:20, dpc_w:5}
+  },
+};
+
 // ══ DATA STORES ══
-let salesRows=[], crmRows=[], goals={}, crmGoals={};
+let salesRows=[], crmRows=[], ipRows=[], goals={}, crmGoals={};
 let gpTarget=40, qtcTarget=35, newBizPctGoal=30, existingPctGoal=70;
 let gpTargets={}, qtcTargets={}, existingPctGoals={}, newBizPctGoals={};
 let companyGoal={yearly:9600000, gp:27.5, qtc:64, existing:80, newBiz:20};
@@ -472,6 +648,7 @@ let hasLiveData=false, page='company', viewPeriod='ytd';
 
 const LS_SALES    = 'dd_salesRows';
 const LS_CRM      = 'dd_crmRows';
+const LS_IPSALES  = 'dd_ipRows';
 const LS_GOALS    = 'dd_goals';
 const LS_CRMGOALS = 'dd_crmGoals';
 const LS_TARGETS  = 'dd_targets';
@@ -483,6 +660,9 @@ function saveToStorage(){
     ));
     localStorage.setItem(LS_CRM, JSON.stringify(
       crmRows.map(r=>({...r, date:r.date.toISOString()}))
+    ));
+    localStorage.setItem(LS_IPSALES, JSON.stringify(
+      ipRows.map(r=>({...r, date:r.date.toISOString()}))
     ));
     localStorage.setItem(LS_GOALS,    JSON.stringify(goals));
     localStorage.setItem(LS_CRMGOALS, JSON.stringify(crmGoals));
@@ -496,6 +676,8 @@ function loadFromStorage(){
     if(sr){ salesRows = JSON.parse(sr).map(r=>({...r, date:new Date(r.date)})); }
     const cr = localStorage.getItem(LS_CRM);
     if(cr){ crmRows = JSON.parse(cr).map(r=>({...r, date:new Date(r.date)})); }
+    const ir = localStorage.getItem(LS_IPSALES);
+    if(ir){ ipRows = JSON.parse(ir).map(r=>({...r, date:new Date(r.date)})); }
     const g = localStorage.getItem(LS_GOALS);
     if(g) goals = JSON.parse(g);
     const cg = localStorage.getItem(LS_CRMGOALS);
@@ -672,27 +854,14 @@ function loadSales(input){
   const file=input.files[0];if(!file)return;
   readFile(file,text=>{
     try{
-      var added=0, updated=0;
-      parseCSV(text).forEach(function(row){
-        const idx=matchRep(row['rep']||row['name']||row['sales_rep']);if(idx===-1)return;
-        const d=parseDate(row['date']);if(!d)return;
-        const key=rowKey(idx,d);
-        const newRow={repIdx:idx,date:d,
-          sales:cn(row['sales']||row['sales_$']||row['amount']),
-          gp:cn(row['gp_pct']||row['gp%']||row['gp']),
-          quotes:parseInt(row['quotes'])||0,
-          orders:parseInt(row['orders'])||0,
-          existing:cn(row['existing']||row['existing_$']),
-          newbiz:cn(row['new_biz']||row['new']||row['new_$']),
-          backorders:cn(row['backorders']||row['backorder'])};
-        const existing=salesRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===key;});
-        if(existing>=0){ salesRows[existing]=newRow; updated++; }
-        else{ salesRows.push(newRow); added++; }
-      });
+      const prevSales=salesRows.length, prevIP=ipRows.length;
+      ipRows=[];
+      processSalesCSV(text);
       hasLiveData=true;
       saveToStorage();
       updateStorageSummary();
-      document.getElementById('st-sales').textContent='✓ +'+added+' rows';
+      const added=salesRows.length-prevSales;
+      document.getElementById('st-sales').textContent='✓ '+salesRows.length+' rows'+(ipRows.length?' · '+ipRows.length+' IP':'');
       stamp();render();
     }catch(e){document.getElementById('st-sales').textContent='⚠ '+e.message;}
   });
@@ -759,15 +928,49 @@ function loadCRMGoals(input){
     }catch(e){document.getElementById('st-crmgoals').textContent='⚠ '+e.message;}
   });
 }
+function processIPSalesCSV(text){
+  parseCSV(text).forEach(function(row){
+    var idx=matchRep(row['rep']||row['name']||row['sales_rep']);if(idx===-1)return;
+    var d=parseDate(row['date']);if(!d)return;
+    var key=rowKey(idx,d);
+    var newRow={repIdx:idx,date:d,
+      sales:cn(row['sales']||row['sales_$']||row['amount']),
+      gp:cn(row['gp_pct']||row['gp%']||row['gp'])};
+    var ei=ipRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===key;});
+    if(ei>=0) ipRows[ei]=newRow; else ipRows.push(newRow);
+  });
+}
+function loadIPSales(input){
+  const file=input.files[0];if(!file)return;
+  readFile(file,text=>{
+    try{
+      var added=0,updated=0;
+      parseCSV(text).forEach(function(row){
+        const idx=matchRep(row['rep']||row['name']||row['sales_rep']);if(idx===-1)return;
+        const d=parseDate(row['date']);if(!d)return;
+        const key=rowKey(idx,d);
+        const newRow={repIdx:idx,date:d,
+          sales:cn(row['sales']||row['sales_$']||row['amount']),
+          gp:cn(row['gp_pct']||row['gp%']||row['gp'])};
+        const ei=ipRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===key;});
+        if(ei>=0){ipRows[ei]=newRow;updated++;}else{ipRows.push(newRow);added++;}
+      });
+      hasLiveData=true;
+      saveToStorage();
+      document.getElementById('st-ipsales').textContent='✓ +'+added+' rows';
+      stamp();render();
+    }catch(e){document.getElementById('st-ipsales').textContent='⚠ '+e.message;}
+  });
+}
 function clearAllData(){
-  salesRows=[];crmRows=[];goals={};crmGoals={};
+  salesRows=[];crmRows=[];ipRows=[];goals={};crmGoals={};
   gpTarget=40;qtcTarget=35;newBizPctGoal=30;existingPctGoal=70;gpTargets={};qtcTargets={};existingPctGoals={};newBizPctGoals={};companyGoal={yearly:9600000,gp:27.5,qtc:64,existing:80,newBiz:20};
   hasLiveData=false;
   try{
-    [LS_SALES,LS_CRM,LS_GOALS,LS_CRMGOALS,LS_TARGETS].forEach(k=>localStorage.removeItem(k));
+    [LS_SALES,LS_CRM,LS_IPSALES,LS_GOALS,LS_CRMGOALS,LS_TARGETS].forEach(k=>localStorage.removeItem(k));
   }catch(e){}
-  ['st-sales','st-crm','st-goals','st-crmgoals'].forEach(function(id){
-    document.getElementById(id).textContent='';
+  ['st-sales','st-crm','st-ipsales','st-goals','st-crmgoals'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.textContent='';
   });
   document.querySelectorAll('.panel-body .file-input-wrapper input').forEach(function(i){i.value='';});
   document.getElementById('last-updated').textContent='';
@@ -780,14 +983,19 @@ function stamp(){
 }
 
 // ══ GOAL MATH ══
-const FALLBACK_GOALS=[1420000,1120000,1420000,1020000,1720000,1220000,980000];
-function getYearlyGoal(idx){return goals[idx]||FALLBACK_GOALS[idx]||1000000;}
+function getYearlyGoal(idx){
+  if(goals[idx]) return goals[idx]; // CSV upload overrides config
+  const rg=REP_GOALS[idx];
+  if(!rg) return 1000000;
+  return rg.qGoals.Q1+rg.qGoals.Q2+rg.qGoals.Q3+rg.qGoals.Q4;
+}
 
 function calcGoals(idx, qtr){
-  const q = qtr || getQtrLabel(new Date());
+  const q=qtr||getQtrLabel(new Date());
   const yg=getYearlyGoal(idx);
-  const qw=Q_WEIGHTS[q]||0.28;
-  const qg=Math.round(yg*qw);
+  const rg=REP_GOALS[idx];
+  // Use exact quarterly goal from config; fall back to Q_WEIGHTS if not set
+  const qg=rg?(rg.qGoals[q]||Math.round(yg*(Q_WEIGHTS[q]||0.28))):Math.round(yg*(Q_WEIGHTS[q]||0.28));
   const wd=cfg.wd[q]||63;
   const weeks=wd/5;
   const wg=Math.round(qg/weeks);
@@ -795,10 +1003,23 @@ function calcGoals(idx, qtr){
   return{yg,qg,mg,wg,wd,weeks:parseFloat(weeks.toFixed(1)),q};
 }
 
-function getCRMGoals(idx){return crmGoals[idx]||{acv_q:110,dpv_q:80,acc_q:210,dpc_q:140};}
 function getCRMWeekly(idx,q){
-  const qg=getCRMGoals(idx),wd=cfg.wd[q||getQtrLabel(new Date())]||63,weeks=wd/5;
-  return{acv_w:Math.round(qg.acv_q/weeks),dpv_w:Math.round(qg.dpv_q/weeks),acc_w:Math.round(qg.acc_q/weeks),dpc_w:Math.round(qg.dpc_q/weeks)};
+  // crmGoals CSV upload overrides config; otherwise use REP_GOALS weekly values directly
+  if(crmGoals[idx]){
+    const wd=cfg.wd[q||getQtrLabel(new Date())]||63,weeks=wd/5,qg=crmGoals[idx];
+    return{acv_w:Math.round(qg.acv_q/weeks),dpv_w:Math.round(qg.dpv_q/weeks),acc_w:Math.round(qg.acc_q/weeks),dpc_w:Math.round(qg.dpc_q/weeks)};
+  }
+  const rg=REP_GOALS[idx];
+  if(rg) return{acv_w:rg.crm.acv_w,dpv_w:rg.crm.dpv_w,acc_w:rg.crm.acc_w,dpc_w:rg.crm.dpc_w};
+  return{acv_w:8,dpv_w:6,acc_w:17,dpc_w:11};
+}
+
+function getCRMGoals(idx,q){
+  // Returns quarterly CRM goals derived from weekly goals × weeks in quarter
+  if(crmGoals[idx]) return crmGoals[idx];
+  const wd=cfg.wd[q||getQtrLabel(new Date())]||63,weeks=wd/5;
+  const wg=getCRMWeekly(idx,q);
+  return{acv_q:Math.round(wg.acv_w*weeks),dpv_q:Math.round(wg.dpv_w*weeks),acc_q:Math.round(wg.acc_w*weeks),dpc_q:Math.round(wg.dpc_w*weeks)};
 }
 
 // ══ DATA AGGREGATION ══
@@ -884,26 +1105,60 @@ function aggCRM(idx){
   return{acv_w,dpv_w,acc_w,dpc_w,acv_q,dpv_q,acc_q,dpc_q,acv_p,dpv_p,acc_p,dpc_p};
 }
 
+function aggIPSales(idx){
+  const rows=ipRows.filter(r=>r.repIdx===idx);
+  if(!rows.length) return null;
+  const pw=getPeriodWindow();
+  const now=new Date();
+  const curW=getWeekStart(now).getTime(),curM=now.getMonth(),curY=now.getFullYear(),curQ=getQtr(now);
+  const lwStart=new Date(getWeekStart(now));lwStart.setDate(lwStart.getDate()-7);
+  const lwEnd=new Date(lwStart);lwEnd.setDate(lwStart.getDate()+6);lwEnd.setHours(23,59,59);
+  const pwQ=pw.qtr?parseInt(pw.qtr.replace('Q','')):(curQ);
+  const pwQStartMonth=(pwQ-1)*3;
+  let w_ip=0,lw_ip=0,m_ip=0,q_ip=0,y_ip=0,periodSales_ip=0,m1_ip=0,m2_ip=0,m3_ip=0;
+  rows.forEach(row=>{
+    const rw=getWeekStart(row.date).getTime(),rm=row.date.getMonth(),ry=row.date.getFullYear(),rq=getQtr(row.date);
+    if(ry===curY) y_ip+=row.sales;
+    if(ry===curY&&rq===curQ) q_ip+=row.sales;
+    if(rw===curW) w_ip+=row.sales;
+    if(inWindow(row.date,lwStart,lwEnd)) lw_ip+=row.sales;
+    if(ry===curY&&rq===curQ&&rm===curM) m_ip+=row.sales;
+    if(inWindow(row.date,pw.start,pw.end)){
+      periodSales_ip+=row.sales;
+      if(rm===pwQStartMonth)   m1_ip+=row.sales;
+      if(rm===pwQStartMonth+1) m2_ip+=row.sales;
+      if(rm===pwQStartMonth+2) m3_ip+=row.sales;
+    }
+  });
+  return{w_ip,lw_ip,m_ip,q_ip,y_ip,periodSales_ip,m1_ip,m2_ip,m3_ip};
+}
+
 // ══ SAMPLE DATA ══
 const SAMPLE=[
   {w:28400,lw:24100,m:121000,q:338800,y:892000,periodSales:892000,gp:38.2,qtc_quotes:47,qtc_orders:16,converted_sales:89200,backorders:84200,existing:641000,newbiz:251000,acv_w:10,dpv_w:6,acc_w:18,dpc_w:12,acv_q:108,dpv_q:64,acc_q:201,dpc_q:124,acv_p:108,dpv_p:64,acc_p:201,dpc_p:124},
   {w:19800,lw:16400,m:84200, q:235800,y:621000,periodSales:621000,gp:31.5,qtc_quotes:39,qtc_orders:11,converted_sales:62100,backorders:31400,existing:534000,newbiz:87000, acv_w:7, dpv_w:8, acc_w:14,dpc_w:14,acv_q:82, dpv_q:88, acc_q:154,dpc_q:160,acv_p:82, dpv_p:88, acc_p:154,dpc_p:160},
   {w:36100,lw:31200,m:154800,q:433400,y:1142000,periodSales:1142000,gp:42.1,qtc_quotes:51,qtc_orders:21,converted_sales:141200,backorders:128600,existing:764000,newbiz:378000,acv_w:12,dpv_w:5,acc_w:22,dpc_w:10,acv_q:124,dpv_q:54,acc_q:248,dpc_q:108,acv_p:124,dpv_p:54,acc_p:248,dpc_p:108},
-  {w:16200,lw:13800,m:69400, q:194300,y:512000,periodSales:512000,gp:29.8,qtc_quotes:32,qtc_orders:8, backorders:22800,existing:432000,newbiz:80000, acv_w:5, dpv_w:6, acc_w:11,dpc_w:11,acv_q:64, dpv_q:68, acc_q:124,dpc_q:124,acv_p:64, dpv_p:68, acc_p:124,dpc_p:124},
-  {w:44200,lw:39800,m:188600,q:527800,y:1388000,periodSales:1388000,gp:45.6,qtc_quotes:56,qtc_orders:27,converted_sales:188600,backorders:214000,existing:912000,newbiz:476000,acv_w:16,dpv_w:9,acc_w:28,dpc_w:16,acv_q:164,dpv_q:92,acc_q:316,dpc_q:176,acv_p:164,dpv_p:92,acc_p:316,dpc_p:176},
+  {w:16200,lw:13800,m:69400, q:194300,y:512000,periodSales:512000,gp:29.8,qtc_quotes:32,qtc_orders:8, backorders:22800,existing:432000,newbiz:80000, acv_w:5, dpv_w:6, acc_w:11,dpc_w:11,acv_q:64, dpv_q:68, acc_q:124,dpc_q:124,acv_p:64, dpv_p:68, acc_p:124,dpc_p:124,w_ip:9200,lw_ip:7800,m_ip:38000,q_ip:106000,y_ip:280000,periodSales_ip:280000},
+  {w:44200,lw:39800,m:188600,q:527800,y:1388000,periodSales:1388000,gp:45.6,qtc_quotes:56,qtc_orders:27,converted_sales:188600,backorders:214000,existing:912000,newbiz:476000,acv_w:16,dpv_w:9,acc_w:28,dpc_w:16,acv_q:164,dpv_q:92,acc_q:316,dpc_q:176,acv_p:164,dpv_p:92,acc_p:316,dpc_p:176,w_ip:24000,lw_ip:21000,m_ip:98000,q_ip:274000,y_ip:722000,periodSales_ip:722000},
   {w:22800,lw:19600,m:97200, q:272100,y:718000,periodSales:718000,gp:34.1,qtc_quotes:42,qtc_orders:13,converted_sales:97200,backorders:67400,existing:582000,newbiz:136000,acv_w:9, dpv_w:6, acc_w:17,dpc_w:11,acv_q:102,dpv_q:68,acc_q:192,dpc_q:124,acv_p:102,dpv_p:68,acc_p:192,dpc_p:124},
   {w:18600,lw:15900,m:79400, q:221800,y:586000,periodSales:586000,gp:36.7,qtc_quotes:38,qtc_orders:13,converted_sales:79400,backorders:44200,existing:468000,newbiz:118000,acv_w:8, dpv_w:5, acc_w:15,dpc_w:10,acv_q:94, dpv_q:58, acc_q:178,dpc_q:112,acv_p:94, dpv_p:58, acc_p:178,dpc_p:112},
+  // Jake Perry (idx 7)
+  {w:14200,lw:11800,m:60400, q:169000,y:446000,periodSales:446000,gp:35.2,qtc_quotes:28,qtc_orders:9, converted_sales:60400,backorders:32100,existing:356000,newbiz:90000, acv_w:2, dpv_w:1, acc_w:5, dpc_w:3, acv_q:24, dpv_q:12, acc_q:56, dpc_q:34, acv_p:24, dpv_p:12, acc_p:56, dpc_p:34},
+  // Zane Anderson (idx 8) — ipOnly; IP sample values only, no regular sales
+  {w:0,lw:0,m:0,q:0,y:0,periodSales:0,gp:0,qtc_quotes:0,qtc_orders:0,converted_sales:0,backorders:0,existing:0,newbiz:0,acv_w:2,dpv_w:1,acc_w:2,dpc_w:1,acv_q:24,dpv_q:12,acc_q:24,dpc_q:12,acv_p:24,dpv_p:12,acc_p:24,dpc_p:12,w_ip:18400,lw_ip:15200,m_ip:74000,q_ip:207000,y_ip:546000,periodSales_ip:546000},
 ];
 
+const IP_ZERO={w_ip:0,lw_ip:0,m_ip:0,q_ip:0,y_ip:0,periodSales_ip:0,m1_ip:0,m2_ip:0,m3_ip:0};
 function getRepData(idx){
-  const ls=aggSales(idx),lc=aggCRM(idx);
+  const ls=aggSales(idx),lc=aggCRM(idx),li=aggIPSales(idx);
   if(hasLiveData){
     const crmData=lc||{acv_w:0,dpv_w:0,acc_w:0,dpc_w:0,acv_q:0,dpv_q:0,acc_q:0,dpc_q:0,acv_p:0,dpv_p:0,acc_p:0,dpc_p:0};
     const salesData=ls||{w:0,lw:0,m:0,q:0,y:0,gp:0,periodSales:0,qtc_quotes:0,qtc_orders:0,backorders:0,existing:0,newbiz:0,converted_sales:0};
-    return{...salesData,...crmData};
+    const ipData=li||IP_ZERO;
+    return{...salesData,...crmData,...ipData};
   }
-  const s=SAMPLE[idx];
-  return{...s,...(ls||{}),...(lc||{})};
+  const s=SAMPLE[idx]||{...SAMPLE[0]};
+  return{...IP_ZERO,...s,...(ls||{}),...(lc||{}),...(li||{})};
 }
 
 // ══ HELPERS ══
@@ -939,80 +1194,129 @@ function salesMultiBar(d, idx, pw){
   const qtr = pw.qtr || getQtrLabel(new Date());
   const g = calcGoals(idx, qtr);
   const {wg,mg,qg,yg,wd,weeks,q} = g;
-  const qLbl=`${q} &middot; ${Math.round((Q_WEIGHTS[q]||0.28)*100)}% of yr`;
+  const qPct=yg>0?Math.round((qg/yg)*100):Math.round((Q_WEIGHTS[q]||0.28)*100);
+  const qLbl=`${q} &middot; ${qPct}% of yr`;
+  const hasIP = REPS[idx] && REPS[idx].hasIP;
 
-  // Month names for quarterly breakdown
   const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const pwQ=pw.qtr?parseInt(pw.qtr.replace('Q','')):(getQtr(new Date()));
-  const qm0=(pwQ-1)*3; // first month of quarter
+  const qm0=(pwQ-1)*3;
   const isQtrView=['this_quarter','last_quarter'].includes(viewPeriod);
 
   const bars = pw.bars || ['lastweek','week','month','quarter','year'];
   const allRows=[
-    {key:'lastweek', label:'Last Week', val:d.lw||0, goal:wg, muted:true},
-    {key:'week', label:'This Week', val:d.w, goal:wg, note:`${wd}wd / ${weeks}wk avg`},
-    {key:'month', label:'Monthly', val:d.m, goal:mg},
-    {key:'quarter',label:qLbl,    val:d.q, goal:qg},
-    {key:'year',  label:'Yearly',  val:d.y, goal:yg},
+    {key:'lastweek', label:'Last Week', val:d.lw||0,        goal:wg, muted:true, ip:d.lw_ip||0},
+    {key:'week',     label:'This Week', val:d.w,            goal:wg, note:`${wd}wd / ${weeks}wk avg`, ip:d.w_ip||0},
+    {key:'month',    label:'Monthly',   val:d.m,            goal:mg, ip:d.m_ip||0},
+    {key:'quarter',  label:qLbl,        val:d.q,            goal:qg, ip:d.q_ip||0},
+    {key:'year',     label:'Yearly',    val:d.y,            goal:yg, ip:d.y_ip||0},
   ];
-  // Build visible rows based on selected period
+
   var visRows;
   if(isQtrView){
-    // Quarter: show Jan/Feb/Mar (or Q2 months) + quarter total
     visRows=[
-      {key:'m1', label:MONTH_NAMES[qm0],   val:d.m1||0, goal:mg},
-      {key:'m2', label:MONTH_NAMES[qm0+1], val:d.m2||0, goal:mg},
-      {key:'m3', label:MONTH_NAMES[qm0+2], val:d.m3||0, goal:mg},
-      {key:'quarter', label:qLbl,           val:d.periodSales, goal:qg},
+      {key:'m1', label:MONTH_NAMES[qm0],   val:d.m1||0,        goal:mg, ip:d.m1_ip||0},
+      {key:'m2', label:MONTH_NAMES[qm0+1], val:d.m2||0,        goal:mg, ip:d.m2_ip||0},
+      {key:'m3', label:MONTH_NAMES[qm0+2], val:d.m3||0,        goal:mg, ip:d.m3_ip||0},
+      {key:'quarter', label:qLbl,          val:d.periodSales,  goal:qg, ip:d.periodSales_ip||0},
     ];
   } else if(viewPeriod==='last_week'){
-    // Last week: single bar showing last week total vs weekly goal
-    visRows=[
-      {key:'lw', label:'Last Week', val:d.periodSales, goal:wg},
-    ];
+    visRows=[{key:'lw', label:'Last Week', val:d.periodSales, goal:wg, ip:d.periodSales_ip||0}];
   } else if(viewPeriod==='last_month'){
-    // Last month: single bar showing last month total vs monthly goal
     var lmLabel=pw.label||'Last Month';
-    visRows=[
-      {key:'lm', label:lmLabel, val:d.periodSales, goal:mg},
-    ];
+    visRows=[{key:'lm', label:lmLabel, val:d.periodSales, goal:mg, ip:d.periodSales_ip||0}];
   } else if(viewPeriod==='yesterday'){
     var dgGoal=Math.round(wg/5);
-    visRows=[{key:'yd', label:'Yesterday', val:d.periodSales, goal:dgGoal}];
+    visRows=[{key:'yd', label:'Yesterday', val:d.periodSales, goal:dgGoal, ip:d.periodSales_ip||0}];
   } else if(viewPeriod==='today'){
     var dgGoal2=Math.round(wg/5);
-    visRows=[{key:'td', label:'Today', val:d.periodSales, goal:dgGoal2}];
+    visRows=[{key:'td', label:'Today', val:d.periodSales, goal:dgGoal2, ip:d.periodSales_ip||0}];
   } else if(viewPeriod==='this_month'){
-    visRows=[{key:'month', label:pw.label||'This Month', val:d.periodSales, goal:mg}];
+    visRows=[{key:'month', label:pw.label||'This Month', val:d.periodSales, goal:mg, ip:d.periodSales_ip||0}];
   } else if(viewPeriod==='this_week'){
-    visRows=[{key:'week', label:'This Week', val:d.periodSales, goal:wg}];
+    visRows=[{key:'week', label:'This Week', val:d.periodSales, goal:wg, ip:d.w_ip||0}];
   } else {
     visRows = allRows.filter(r=>bars.includes(r.key));
   }
   const showPeriod = !['ytd','this_week','this_month','this_quarter'].includes(viewPeriod);
 
+  function renderRegRow(r){
+    const p=pct(r.val,r.goal);
+    const mu=r.muted===true;
+    const vc='color:'+pc(p);
+    const barColor=bc(p);
+    const bar=mu?'<div class="pbar-track"><div class="pbar-fill" style="width:'+Math.min(p,100)+'%;background:'+barColor+';"></div></div>':pb(r.val,r.goal);
+    const note=r.note?'<div style="font-size:8px;letter-spacing:.5px;color:var(--muted);text-transform:none;margin-top:1px">'+r.note+'</div>':'';
+    return'<div class="sales-row">'
+      +'<div class="sales-row-label">'+r.label+note+'</div>'
+      +'<div class="sales-row-bar">'+bar+'</div>'
+      +'<div class="sales-row-nums"><span class="sales-val" style="'+vc+'">'+fmt(r.val)+'</span>'
+      +'<span class="sales-goal-txt">/ '+fmt(r.goal)+'</span>'
+      +'<span class="sales-pct" style="'+vc+'">'+p+'%</span></div>'
+      +'</div>';
+  }
+  function renderIPRow(r){
+    const ipVal=r.ip||0;
+    const ipPct=r.goal>0?Math.min(Math.round((ipVal/r.goal)*100),100):0;
+    return'<div class="sales-row">'
+      +'<div class="sales-row-label" style="color:var(--accent2)">'+r.label
+      +' <span style="font-size:8px;background:rgba(14,165,233,0.18);color:var(--accent2);border-radius:3px;padding:1px 5px;letter-spacing:.5px;font-weight:700;margin-left:4px">IP</span></div>'
+      +'<div class="sales-row-bar"><div class="pbar-track"><div class="pbar-fill" style="width:'+ipPct+'%;background:var(--accent2);opacity:0.75"></div></div></div>'
+      +'<div class="sales-row-nums"><span class="sales-val" style="color:var(--accent2)">'+fmt(ipVal)+'</span></div>'
+      +'</div>';
+  }
+
+  const rowsHtml=visRows.map(r=>renderRegRow(r)+(hasIP?renderIPRow(r):'')).join('');
+
   return `<div class="card"><div class="section-label">Total Sales vs. Sales Goal</div>
     ${showPeriod?`<div class="sales-row"><div class="sales-row-label" style="color:var(--accent2)">Period Total</div><div class="sales-row-bar"></div><div class="sales-row-nums"><span class="sales-val" style="color:var(--accent2)">${fmt(d.periodSales)}</span></div></div>`:''}
-    ${visRows.map(r=>{
-      const p=pct(r.val,r.goal);
-      const mu=r.muted===true;
-      const vc='color:'+pc(p);
-      const barColor=bc(p);
-      const bar=mu?'<div class="pbar-track"><div class="pbar-fill" style="width:'+Math.min(p,100)+'%;background:'+barColor+';"></div></div>':pb(r.val,r.goal);
-      const note=r.note?'<div style="font-size:8px;letter-spacing:.5px;color:var(--muted);text-transform:none;margin-top:1px">'+r.note+'</div>':'';
-      return'<div class="sales-row">'
-        +'<div class="sales-row-label">'+r.label+note+'</div>'
-        +'<div class="sales-row-bar">'+bar+'</div>'
-        +'<div class="sales-row-nums"><span class="sales-val" style="'+vc+'">'+fmt(r.val)+'</span>'
-        +'<span class="sales-goal-txt">/ '+fmt(r.goal)+'</span>'
-        +'<span class="sales-pct" style="'+vc+'">'+p+'%</span></div>'
-        +'</div>';
-    }).join('')}
+    ${rowsHtml}
   </div>`;
 }
 
+function ipSalesCard(d, idx, pw){
+  const qtr=pw.qtr||getQtrLabel(new Date());
+  const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const pwQ=pw.qtr?parseInt(pw.qtr.replace('Q','')):(getQtr(new Date()));
+  const qm0=(pwQ-1)*3;
+  const isQtrView=['this_quarter','last_quarter'].includes(viewPeriod);
+
+  var ipBars;
+  if(isQtrView){
+    ipBars=[
+      {label:MONTH_NAMES[qm0]+' IP',   val:d.m1_ip||0},
+      {label:MONTH_NAMES[qm0+1]+' IP', val:d.m2_ip||0},
+      {label:MONTH_NAMES[qm0+2]+' IP', val:d.m3_ip||0},
+      {label:qtr+' IP',                val:d.periodSales_ip||0},
+    ];
+  } else if(['last_week','today','yesterday','this_week'].includes(viewPeriod)){
+    const lbl=(pw.label||viewPeriod).replace(/\s*IP$/i,'');
+    ipBars=[{label:lbl+' IP', val:d.periodSales_ip||0}];
+  } else if(['last_month','this_month'].includes(viewPeriod)){
+    ipBars=[{label:(pw.label||'Month')+' IP', val:d.periodSales_ip||0}];
+  } else {
+    ipBars=[
+      {label:'Last Week IP', val:d.lw_ip||0},
+      {label:'This Week IP', val:d.w_ip||0},
+      {label:'Monthly IP',   val:d.m_ip||0},
+      {label:qtr+' IP',      val:d.q_ip||0},
+      {label:'Yearly IP',    val:d.y_ip||0},
+    ];
+  }
+  const maxVal=Math.max(...ipBars.map(b=>b.val),1);
+  const rows=ipBars.map(b=>{
+    const barPct=Math.min(Math.round((b.val/maxVal)*100),100);
+    return'<div class="sales-row">'
+      +'<div class="sales-row-label" style="color:var(--accent2)">'+b.label+'</div>'
+      +'<div class="sales-row-bar"><div class="pbar-track"><div class="pbar-fill" style="width:'+barPct+'%;background:var(--accent2);opacity:0.8"></div></div></div>'
+      +'<div class="sales-row-nums"><span class="sales-val" style="color:var(--accent2)">'+fmt(b.val)+'</span></div>'
+      +'</div>';
+  }).join('');
+  return`<div class="card"><div class="section-label">&#9651; IP Sales (Input Sales)</div>${rows}</div>`;
+}
+
 function gpCard(d,repIdx){
-  var tgt=(repIdx==='company')?(companyGoal.gp||gpTarget):((repIdx!==undefined&&gpTargets[repIdx])?gpTargets[repIdx]:gpTarget);
+  var tgt=(repIdx==='company')?(companyGoal.gp||gpTarget):((repIdx!==undefined&&gpTargets[repIdx])?gpTargets[repIdx]:(REP_GOALS[repIdx]?REP_GOALS[repIdx].gpm:gpTarget));
   var p=pct(d.gp,tgt);
   return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div class="section-label" style="margin-bottom:0">GP%</div><span class="badge '+bclass(p)+'">'+btext(p)+'</span></div>'
     +'<div class="med-num" style="color:'+pc(p)+'">'+d.gp+'%</div>'
@@ -1022,7 +1326,7 @@ function gpCard(d,repIdx){
 }
 
 function qtcCard(d,repIdx){
-  var tgt=(repIdx==='company')?(companyGoal.qtc||qtcTarget):((repIdx!==undefined&&qtcTargets[repIdx])?qtcTargets[repIdx]:qtcTarget);
+  var tgt=(repIdx==='company')?(companyGoal.qtc||qtcTarget):((repIdx!==undefined&&qtcTargets[repIdx])?qtcTargets[repIdx]:(REP_GOALS[repIdx]?REP_GOALS[repIdx].qtc:qtcTarget));
   const qtc=d.qtc_quotes>0?Math.round((d.qtc_orders/d.qtc_quotes)*100):0,p=pct(qtc,tgt);
   const convSales=d.converted_sales>0 ? d.converted_sales
     : (d.qtc_quotes>0 ? Math.round((d.periodSales||d.y)*(d.qtc_orders/d.qtc_quotes)) : 0);
@@ -1046,8 +1350,8 @@ function backorderCard(val,sub){
 
 function envCard(ex,nw,repIdx){
   const t=ex+nw||1,exP=Math.round((ex/t)*100),nwP=100-exP;
-  const exG=(repIdx==='company')?(companyGoal.existing||existingPctGoal):((repIdx!==undefined&&existingPctGoals[repIdx])?existingPctGoals[repIdx]:existingPctGoal||70);
-  const nwG=(repIdx==='company')?(companyGoal.newBiz||newBizPctGoal):((repIdx!==undefined&&newBizPctGoals[repIdx])?newBizPctGoals[repIdx]:newBizPctGoal||30);
+  const exG=(repIdx==='company')?(companyGoal.existing||existingPctGoal):((repIdx!==undefined&&existingPctGoals[repIdx])?existingPctGoals[repIdx]:(REP_GOALS[repIdx]?REP_GOALS[repIdx].existing:existingPctGoal||70));
+  const nwG=(repIdx==='company')?(companyGoal.newBiz||newBizPctGoal):((repIdx!==undefined&&newBizPctGoals[repIdx])?newBizPctGoals[repIdx]:(REP_GOALS[repIdx]?REP_GOALS[repIdx].newBiz:newBizPctGoal||30));
   const exPp=pct(exP,exG),nwPp=pct(nwP,nwG);
   return'<div class="card"><div class="section-label">&#128188; Existing vs. New Business</div>'
     +'<div class="env-split">'
@@ -1076,7 +1380,7 @@ function envCard(ex,nw,repIdx){
 // ══ FIX: crmSection now derives showPeriod locally instead of relying on outer scope ══
 function crmSection(d,idx,pw){
   const qtr=pw.qtr||getQtrLabel(new Date());
-  const qg=getCRMGoals(idx),wg=getCRMWeekly(idx,qtr);
+  const qg=getCRMGoals(idx,qtr),wg=getCRMWeekly(idx,qtr);
   const showBoth=pw.showCRM==='both';
   const isHistorical=['last_week','last_month','last_quarter','last_year','yesterday'].includes(viewPeriod);
 
@@ -1087,7 +1391,8 @@ function crmSection(d,idx,pw){
     {label:'Dormant/Prospect Visits',val:isHistorical?d.dpv_p:d.dpv_w, goal:wg.dpv_w, q:d.dpv_q, qg:qg.dpv_q, icon:'&#128682;'},
     {label:'Active Customer Calls',  val:isHistorical?d.acc_p:d.acc_w, goal:wg.acc_w, q:d.acc_q, qg:qg.acc_q, icon:'&#128222;'},
     {label:'Dormant/Prospect Calls', val:isHistorical?d.dpc_p:d.dpc_w, goal:wg.dpc_w, q:d.dpc_q, qg:qg.dpc_q, icon:'&#128242;'},
-  ];
+  ].filter(m=>m.goal>0);
+  if(!metrics.length) return '';
   const periodLabel=isHistorical?pw.label:'Weekly';
   const cards=metrics.map(m=>{
     const vp=pct(m.val,m.goal),qp=pct(m.q,m.qg);
@@ -1101,7 +1406,7 @@ function crmSection(d,idx,pw){
 
 // ══ WEEKLY PODIUM ══
 function lastWeekPodium(){
-  const ranked=REPS.map((_,i)=>{const d=getRepData(i);return{...REPS[i],i,w:d.lw||0,gp:d.gp};}).sort((a,b)=>b.w-a.w);
+  const ranked=REPS.map((_,i)=>{const d=getRepData(i);return{...REPS[i],i,w:d.lw||0,gp:d.gp};}).filter(r=>!r.ipOnly).sort((a,b)=>b.w-a.w);
   if(!ranked[0]||ranked[0].w===0) return '';
   const[f,s,t]=[ranked[0],ranked[1],ranked[2]];
   function col(rep,pos){
@@ -1116,7 +1421,7 @@ function lastWeekPodium(){
 }
 
 function weeklyPodium(){
-  const ranked=REPS.map((_,i)=>{const d=getRepData(i);return{...REPS[i],i,w:d.w,gp:d.gp};}).sort((a,b)=>b.w-a.w);
+  const ranked=REPS.map((_,i)=>{const d=getRepData(i);return{...REPS[i],i,w:d.w,gp:d.gp};}).filter(r=>!r.ipOnly).sort((a,b)=>b.w-a.w);
   const noSales=!ranked[0]||ranked[0].w===0;
   if(noSales){
     return`<div class="podium-wrap"><div class="podium-heading">&#11088; Weekly Sales Leaders &#11088;</div>
@@ -1158,7 +1463,9 @@ function weeklyPodium(){
 // ══ RENDER COMPANY ══
 function renderCompany(){
   const pw=getPeriodWindow();
-  const all=REPS.map((_,i)=>getRepData(i));
+  // IP-only reps (Zane) never contribute to company totals
+  const salesIdxs=REPS.map((_,i)=>i).filter(i=>!REPS[i].ipOnly);
+  const all=salesIdxs.map(i=>getRepData(i));
   const sum=key=>all.reduce((a,d)=>a+(d[key]||0),0);
   const qtr=pw.qtr||getQtrLabel(new Date());
   const cyg=companyGoal.yearly||9600000;
@@ -1167,17 +1474,18 @@ function renderCompany(){
   const cwd=cfg.wd[qtr]||63, cwks=cwd/5;
   const cg={yg:cyg, qg:cqg, mg:Math.round(cqg/3), wg:Math.round(cqg/cwks)};
   const compD={w:sum('w'),lw:sum('lw'),m:sum('m'),q:sum('q'),y:sum('y'),converted_sales:sum('converted_sales'),periodSales:sum('periodSales'),
-    gp:parseFloat((all.reduce((a,d)=>a+d.gp,0)/REPS.length).toFixed(1)),
+    gp:all.length?parseFloat((all.reduce((a,d)=>a+d.gp,0)/all.length).toFixed(1)):0,
     qtc_quotes:sum('qtc_quotes'),qtc_orders:sum('qtc_orders'),backorders:sum('backorders'),existing:sum('existing'),newbiz:sum('newbiz'),
     acv_w:sum('acv_w'),dpv_w:sum('dpv_w'),acc_w:sum('acc_w'),dpc_w:sum('dpc_w'),
     acv_q:sum('acv_q'),dpv_q:sum('dpv_q'),acc_q:sum('acc_q'),dpc_q:sum('dpc_q'),
     acv_p:sum('acv_p'),dpv_p:sum('dpv_p'),acc_p:sum('acc_p'),dpc_p:sum('dpc_p')};
 
-  const ccg=REPS.reduce((a,_,i)=>{const g=getCRMGoals(i);a.acv_q+=g.acv_q;a.dpv_q+=g.dpv_q;a.acc_q+=g.acc_q;a.dpc_q+=g.dpc_q;return a;},{acv_q:0,dpv_q:0,acc_q:0,dpc_q:0});
+  // CRM goals: all reps (including Zane — he has his own CRM targets)
+  const ccg=REPS.reduce((a,_,i)=>{const g=getCRMGoals(i,qtr);a.acv_q+=g.acv_q;a.dpv_q+=g.dpv_q;a.acc_q+=g.acc_q;a.dpc_q+=g.dpc_q;return a;},{acv_q:0,dpv_q:0,acc_q:0,dpc_q:0});
   const wd=cfg.wd[qtr]||63,weeks=wd/5;
   const ccw={acv_w:Math.round(ccg.acv_q/weeks),dpv_w:Math.round(ccg.dpv_q/weeks),acc_w:Math.round(ccg.acc_q/weeks),dpc_w:Math.round(ccg.dpc_q/weeks)};
 
-  const sorted=REPS.map((_,i)=>{const d=getRepData(i);const g=calcGoals(i,qtr);return{...REPS[i],i,y:d.y,yg:g.yg,pyg:proratedGoal(g.yg)};}).sort((a,b)=>b.y-a.y);
+  const sorted=salesIdxs.map(i=>{const d=getRepData(i);const g=calcGoals(i,qtr);return{...REPS[i],i,y:d.y,yg:g.yg,pyg:proratedGoal(g.yg)};}).sort((a,b)=>b.y-a.y);
   const lb=sorted.map((r,i)=>{const p=pct(r.y,r.pyg);const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
     return`<div class="lb-row"><div class="lb-rank ${rc}">${i+1}</div><div class="lb-avatar" style="background:${r.color}">${r.avatar}</div>
       <div class="lb-info"><div class="lb-name">${r.name}</div>${pb(r.y,r.yg,true)}</div>
@@ -1206,9 +1514,9 @@ function renderCompany(){
   const qm0C=(pwQC-1)*3;
   const isQtrViewC=['this_quarter','last_quarter'].includes(viewPeriod);
   // Sum monthly breakdown for company
-  const compM1=REPS.reduce((a,_,i)=>{const d=getRepData(i);return a+(d.m1||0);},0);
-  const compM2=REPS.reduce((a,_,i)=>{const d=getRepData(i);return a+(d.m2||0);},0);
-  const compM3=REPS.reduce((a,_,i)=>{const d=getRepData(i);return a+(d.m3||0);},0);
+  const compM1=salesIdxs.reduce((a,i)=>{const d=getRepData(i);return a+(d.m1||0);},0);
+  const compM2=salesIdxs.reduce((a,i)=>{const d=getRepData(i);return a+(d.m2||0);},0);
+  const compM3=salesIdxs.reduce((a,i)=>{const d=getRepData(i);return a+(d.m3||0);},0);
   const qLblC=`${qtr} &middot; ${Math.round((Q_WEIGHTS[qtr]||0.28)*100)}% of yr`;
 
   var visSalesRows;
@@ -1297,28 +1605,49 @@ function renderRep(idx){
   const pw=getPeriodWindow();
   const d=getRepData(idx),rep=REPS[idx];
   const qtr=pw.qtr||getQtrLabel(new Date());
-  const g=calcGoals(idx,qtr),yp=pct(d.y,proratedGoal(g.yg));
-  return`<div class="page-header-row">
+  const g=calcGoals(idx,qtr);
+  const rg=REP_GOALS[idx];
+  const isIPOnly=rep.ipOnly;
+
+  const header=`<div class="page-header-row">
       <div class="rep-header">
         <div class="rep-avatar-lg" style="background:${rep.color}">${rep.avatar}</div>
-        <div><div class="rep-sub">Sales Rep</div><div class="rep-name">${rep.name}</div></div>
-        <span class="badge ${bclass(yp)}" style="margin-left:12px">${btext(yp)}</span>
+        <div><div class="rep-sub">${isIPOnly?'IP Sales Rep':'Sales Rep'}</div><div class="rep-name">${rep.name}</div></div>
+        ${isIPOnly?'<span class="badge badge-pipeline" style="margin-left:12px">IP ONLY</span>':`<span class="badge ${bclass(pct(d.y,proratedGoal(g.yg)))}" style="margin-left:12px">${btext(pct(d.y,proratedGoal(g.yg)))}</span>`}
       </div>
       <div style="display:flex;align-items:center;gap:10px">${periodSelector('sel-rep-'+idx)}<span class="period-badge">${pw.label}</span></div>
     </div>
-    ${!hasLiveData?'<div class="sample-notice">&#9888; Showing sample data &mdash; upload CSVs via sidebar.</div>':''}
-    ${salesMultiBar(d,idx,pw)}
-    <div class="card-grid-2">${gpCard(d,idx)}${qtcCard(d,idx)}</div>
-    ${backorderCard(d.backorders,null)}
-    ${envCard(d.existing,d.newbiz,idx)}
-    ${crmSection(d,idx,pw)}`;}
+    ${!hasLiveData?'<div class="sample-notice">&#9888; Showing sample data &mdash; upload CSVs via sidebar.</div>':''}`;
+
+  if(isIPOnly){
+    // Zane: show IP sales card, then standard KPIs (hide if goal is 0)
+    const crmWg=getCRMWeekly(idx,qtr);
+    const showCRM=crmWg.acv_w>0||crmWg.dpv_w>0||crmWg.acc_w>0||crmWg.dpc_w>0;
+    const showGP=rg&&rg.gpm>0;
+    const showQTC=rg&&rg.qtc>0;
+    const showEnv=(rg&&(rg.existing>0||rg.newBiz>0))&&(d.existing>0||d.newbiz>0);
+    return header
+      +ipSalesCard(d,idx,pw)
+      +(showGP||showQTC?`<div class="card-grid-2">${showGP?gpCard(d,idx):''}${showQTC?qtcCard(d,idx):''}</div>`:'')
+      +(d.backorders>0?backorderCard(d.backorders,null):'')
+      +(showEnv?envCard(d.existing,d.newbiz,idx):'')
+      +(showCRM?crmSection(d,idx,pw):'');
+  }
+
+  return header
+    +salesMultiBar(d,idx,pw)
+    +`<div class="card-grid-2">${gpCard(d,idx)}${qtcCard(d,idx)}</div>`
+    +backorderCard(d.backorders,null)
+    +envCard(d.existing,d.newbiz,idx)
+    +crmSection(d,idx,pw);
+}
 
 // ══ NAV & RENDER ══
 function buildRepNav(){
   var navHtml='';
   REPS.forEach(function(rep,i){
     var d=getRepData(i),g=calcGoals(i),p=pct(d.y,proratedGoal(g.yg));
-    var sc=p>=100?'var(--accent)':p>=85?'var(--warn)':'var(--danger)';
+    var sc=rep.ipOnly?'var(--accent2)':p>=100?'var(--accent)':p>=85?'var(--warn)':'var(--danger)';
     var act=page===String(i)?'active':'';
     navHtml+='<button class="nav-btn '+act+'" id="nav-'+i+'" onclick="setPage('+i+')">';
     navHtml+='<div class="rep-avatar-dot" style="background:'+rep.color+'">';
@@ -1334,7 +1663,7 @@ function buildRepNav(){
     var dotHtml='';
     REPS.forEach(function(_,i){
       var d=getRepData(i),g=calcGoals(i),p2=pct(d.y,proratedGoal(g.yg));
-      var sc=p2>=100?'var(--accent)':p2>=85?'var(--warn)':'var(--danger)';
+      var sc=REPS[i].ipOnly?'var(--accent2)':p2>=100?'var(--accent)':p2>=85?'var(--warn)':'var(--danger)';
       var active=page===String(i)?'outline:2px solid #fff;outline-offset:1px;':'';
       dotHtml+='<div class="sb-rep-avatar" style="background:'+REPS[i].color+';'+active+'"';
       dotHtml+=' title="'+REPS[i].name+'" onclick="setPage('+i+');expandSidebar()">';
@@ -1406,7 +1735,7 @@ function autoFetchFromDrive(silent){
     var loaded=[];
 
     if(result.data && result.data.sales && result.data.sales.content){
-      salesRows=[];
+      salesRows=[];ipRows=[];
       processSalesCSV(result.data.sales.content);
       loaded.push('Sales ('+result.data.sales.lastModified.slice(0,10)+')');
     }
@@ -1442,6 +1771,11 @@ function autoFetchFromDrive(silent){
       processCRMGoalsCSV(result.data.crmGoals.content);
       loaded.push('CRM Goals');
     }
+    if(result.data && result.data.ip_sales && result.data.ip_sales.content){
+      ipRows=[];
+      processIPSalesCSV(result.data.ip_sales.content);
+      loaded.push('IP Sales ('+result.data.ip_sales.lastModified.slice(0,10)+')');
+    }
 
     if(loaded.length>0){
       hasLiveData=true;
@@ -1476,6 +1810,9 @@ function autoFetchFromDrive(silent){
 }
 
 // ── CSV processors ──
+// Maps first name (lowercase) in the Salesperson column → REPS index for IP tracking
+const IP_SALESPEOPLE = {'zach':4, 'zacha':4, 'sean':3, 'zane':8};
+
 function processSalesCSV(text){
   parseCSV(text).forEach(function(row){
     var idx=matchRep(row['rep']||row['name']||row['sales_rep']);if(idx===-1)return;
@@ -1500,6 +1837,26 @@ function processSalesCSV(text){
       converted_sales:cn(row['converted_sales']||row['converted']||'0')};
     var ei=salesRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===key;});
     if(ei>=0) salesRows[ei]=newRow; else salesRows.push(newRow);
+
+    // IP sales: accumulate rows where Salesperson column is Zach / Sean / Zane
+    var spName=(row['salesperson']||'').trim().toLowerCase();
+    var ipIdx=IP_SALESPEOPLE[spName];
+    if(ipIdx!==undefined){
+      var ipSales=cn(row['sales']||row['sales_$']||row['amount']);
+      var ipGP=cn(row['gp_pct']||row['gp%']||row['gp']);
+      var ipKey=rowKey(ipIdx,d);
+      var ipEi=ipRows.findIndex(function(r){return rowKey(r.repIdx,r.date)===ipKey;});
+      if(ipEi>=0){
+        // Weighted-average GP across multiple rows on the same day
+        var ex=ipRows[ipEi];
+        var totalSales=ex.sales+ipSales;
+        var totalGPAmt=(ex.sales*(ex.gp/100))+(ipSales*(ipGP/100));
+        ex.sales=totalSales;
+        ex.gp=totalSales>0?parseFloat(((totalGPAmt/totalSales)*100).toFixed(1)):0;
+      } else {
+        ipRows.push({repIdx:ipIdx,date:d,sales:ipSales,gp:ipGP});
+      }
+    }
   });
 }
 
@@ -1616,6 +1973,372 @@ function expandSidebar(){
   const sb=document.querySelector('.sidebar'),btn=document.getElementById('sb-toggle');
   sb.classList.remove('collapsed');
   btn.innerHTML='&#8249;'; btn.title='Collapse sidebar';
+}
+</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     SANDBOX BANNER
+════════════════════════════════════════════════════════ -->
+<div id="sandbox-banner">⚠ Sandbox Environment — Lead submissions create real Asana tasks in the Sales project ⚠</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     LEAD SUBMISSION MODAL
+════════════════════════════════════════════════════════ -->
+<div id="lead-modal-root" role="dialog" aria-modal="true" aria-labelledby="lm-title">
+  <div class="lm-overlay" onclick="closeLeadModal()"></div>
+  <div class="lm-panel">
+
+    <!-- Header -->
+    <div class="lm-header">
+      <div class="lm-eyebrow">Davis Distributing</div>
+      <h2 id="lm-title">Submit a New Lead</h2>
+      <p>We'll check Copper &amp; Fishbowl and route it automatically.</p>
+      <button class="lm-close-btn" onclick="closeLeadModal()">✕</button>
+    </div>
+
+    <!-- Mock scenario picker (sandbox only) -->
+    <div class="mock-panel" id="mock-panel">
+      <div class="mock-panel-title">🧪 Sandbox — Pick a test scenario</div>
+      <div class="mock-scenario" onclick="mockFill('new-fleet')">
+        <div class="mock-dot" style="background:#00d4aa"></div>
+        <span><strong>New lead — Fleet</strong> → Creates Asana task, assigns to Zane</span>
+      </div>
+      <div class="mock-scenario" onclick="mockFill('new-diesel-zane')">
+        <div class="mock-dot" style="background:#00d4aa"></div>
+        <span><strong>New lead — Diesel (Zane's turn)</strong> → Round-robin → Zane</span>
+      </div>
+      <div class="mock-scenario" onclick="mockFill('new-diesel-sean')">
+        <div class="mock-dot" style="background:#00d4aa"></div>
+        <span><strong>New lead — Diesel (Sean's turn)</strong> → Round-robin → Sean</span>
+      </div>
+      <div class="mock-scenario" onclick="mockFill('new-other')">
+        <div class="mock-dot" style="background:#00d4aa"></div>
+        <span><strong>New lead — Other</strong> → Creates Asana task, assigns to Sean</span>
+      </div>
+      <div class="mock-scenario" onclick="mockFill('exists-copper')">
+        <div class="mock-dot" style="background:#f59e0b"></div>
+        <span><strong>Already in Copper</strong> → Blocked, no task created</span>
+      </div>
+      <div class="mock-scenario" onclick="mockFill('exists-fishbowl')">
+        <div class="mock-dot" style="background:#f59e0b"></div>
+        <span><strong>Already in Fishbowl</strong> → Blocked, no task created</span>
+      </div>
+      <div class="mock-scenario" onclick="mockFill('error')">
+        <div class="mock-dot" style="background:#f43f5e"></div>
+        <span><strong>Network error</strong> → Error handling flow</span>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="lm-body" id="lm-form-body">
+
+      <!-- Row 1: Company Name (full width) -->
+      <div class="lm-field">
+        <label for="lm-company">Company Name <span class="req">*</span></label>
+        <input id="lm-company" type="text" placeholder="e.g. Wasatch Diesel LLC" autocomplete="off"/>
+      </div>
+
+      <!-- Row 2: Location + Customer Type -->
+      <div class="lm-row2">
+        <div class="lm-field">
+          <label for="lm-location">Location <span class="req">*</span></label>
+          <select id="lm-location" class="lm-sel">
+            <option value="">— Select —</option>
+            <option value="Utah">Utah</option>
+            <option value="Idaho">Idaho</option>
+          </select>
+        </div>
+        <div class="lm-field">
+          <label for="lm-group">Customer Type <span class="req">*</span></label>
+          <select id="lm-group" class="lm-sel">
+            <option value="">— Select —</option>
+            <option value="Diesel">Diesel</option>
+            <option value="Fleet">Fleet</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 3: Submitter Name (full width) -->
+      <div class="lm-field">
+        <label for="lm-submitter">Your Name <span class="req">*</span></label>
+        <select id="lm-submitter" class="lm-sel">
+          <option value="">— Select your name —</option>
+          <option value="Chase Martin">Chase Martin</option>
+          <option value="Dan Dalton">Dan Dalton</option>
+          <option value="Jake Perry">Jake Perry</option>
+          <option value="Desia Anderson">Desia Anderson</option>
+          <option value="Ryan Alvey">Ryan Alvey</option>
+          <option value="Zane Anderson">Zane Anderson</option>
+          <option value="Sean Mendenhall">Sean Mendenhall</option>
+          <option value="Zach Alvey">Zach Alvey</option>
+        </select>
+      </div>
+
+      <!-- Row 4: Assign To (full width) -->
+      <div class="lm-field">
+        <label for="lm-assignto">Assign To <span class="req">*</span></label>
+        <select id="lm-assignto" class="lm-sel">
+          <option value="">— Select rep —</option>
+          <option value="Chase Martin">Chase Martin</option>
+          <option value="Dan Dalton">Dan Dalton</option>
+          <option value="Jake Perry">Jake Perry</option>
+          <option value="Desia Anderson">Desia Anderson</option>
+          <option value="Ryan Alvey">Ryan Alvey</option>
+          <option value="Inside Team DD">Inside Team DD</option>
+          <option value="Inside Team AD">Inside Team AD</option>
+        </select>
+      </div>
+
+      <!-- Row 5: Notes (full width) -->
+      <div class="lm-field">
+        <label for="lm-notes">Notes</label>
+        <textarea id="lm-notes" placeholder="Contact info, context, how you heard about them…"></textarea>
+      </div>
+
+      <div id="lm-status" class="lm-status-box"></div>
+    </div>
+
+    <!-- Success screen -->
+    <div class="lm-success" id="lm-success-screen">
+      <div class="lm-success-icon">✅</div>
+      <h3>Lead Submitted!</h3>
+      <p id="lm-success-msg">The lead is new — an Asana task has been created and assigned.</p>
+      <button onclick="closeLeadModal()">Done</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="lm-footer" id="lm-footer">
+      <button class="lm-btn-cancel" onclick="closeLeadModal()">Cancel</button>
+      <button class="lm-btn-submit" id="lm-submit-btn" onclick="submitLead()">
+        <span id="lm-btn-label">Submit Lead</span>
+        <span id="lm-spinner" class="lm-spin" style="display:none">⟳</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     LEAD MODAL JAVASCRIPT
+════════════════════════════════════════════════════════ -->
+<script>
+// ── Asana config (PAT stored in browser settings, never in source code)
+var ASANA_PAT     = (function(){ try{ return JSON.parse(localStorage.getItem('dd_cfg')||'{}').asanaPat||''; }catch(e){ return ''; } })();
+var ASANA_PROJECT = '1201882844321774'; // Sales project
+var ASANA_SECTION = '1214651799941074'; // Sales Leads section
+var ASANA_USERS   = {
+  'Chase Martin':   '1202247464567699',
+  'Dan Dalton':     '1201294660063936',
+  'Jake Perry':     '1214409634870030',
+  'Desia Anderson': '1206341637820448',
+  'Ryan Alvey':     '1209873810020668',
+  'Inside Team DD': ['1202556956175433', '1209928239639558'], // Zane Anderson (assignee) + Sean Mendenhall (follower)
+  'Inside Team AD': '1209875322244753'  // Zach Alvey
+};
+var ASANA_SUBMITTERS = {
+  'Chase Martin':   '1202247464567699',
+  'Dan Dalton':     '1201294660063936',
+  'Jake Perry':     '1214409634870030',
+  'Desia Anderson': '1206341637820448',
+  'Ryan Alvey':     '1209873810020668',
+  'Zane Anderson':  '1202556956175433',
+  'Sean Mendenhall':'1209928239639558',
+  'Zach Alvey':     '1209875322244753'
+};
+
+// ── Diesel round-robin state (in real version this lives in Apps Script Properties)
+var _dieselTurn = 'zane'; // 'zane' or 'sean'
+
+// ── Mock scenario definitions
+var MOCK_SCENARIOS = {
+  'new-fleet': {
+    company:'Mountain West Fleet Services', location:'Utah', group:'Fleet', submitter:'Dan Dalton',
+    notes:'Met at the Fleet Summit last week. Runs 40+ trucks. Looking to switch suppliers.',
+    _mockResult: { status:'created', assignedTo:'Zane Anderson', asanaTask:'Build Copper Company: Mountain West Fleet Services' }
+  },
+  'new-diesel-zane': {
+    company:'Snake River Diesel', location:'Idaho', group:'Diesel', submitter:'Chase Martin',
+    notes:'Walked in cold — very interested in our DEF line.',
+    _mockResult: { status:'created', assignedTo:'Zane Anderson', asanaTask:'Build Copper Company: Snake River Diesel' }
+  },
+  'new-diesel-sean': {
+    company:'Bonneville Diesel Supply', location:'Utah', group:'Diesel', submitter:'Zach Alvey',
+    notes:'Referral from Bear River Trucking.',
+    _mockResult: { status:'created', assignedTo:'Sean Mendenhall', asanaTask:'Build Copper Company: Bonneville Diesel Supply' }
+  },
+  'new-other': {
+    company:'Cache Valley Equipment', location:'Utah', group:'Other', submitter:'Ryan Alvey',
+    notes:'Small shop, interested in parts. Follow up next month.',
+    _mockResult: { status:'created', assignedTo:'Sean Mendenhall', asanaTask:'Build Copper Company: Cache Valley Equipment' }
+  },
+  'exists-copper': {
+    company:'Big-D Construction', location:'Utah', group:'Fleet', submitter:'Dan Dalton',
+    notes:'Saw their trucks at a job site.',
+    _mockResult: { status:'exists', foundIn:'Copper CRM' }
+  },
+  'exists-fishbowl': {
+    company:'Western Trailers Inc', location:'Idaho', group:'Diesel', submitter:'Davis House',
+    notes:'Active account apparently.',
+    _mockResult: { status:'exists', foundIn:'Fishbowl' }
+  },
+  'error': {
+    company:'Test Error Co', location:'Utah', group:'Other', submitter:'Dan Dalton',
+    notes:'',
+    _mockResult: { status:'error', message:'Apps Script timeout — could not reach server.' }
+  }
+};
+
+var _activeMockResult = null;
+
+function mockFill(scenario) {
+  var s = MOCK_SCENARIOS[scenario];
+  if (!s) return;
+  document.getElementById('lm-company').value   = s.company;
+  document.getElementById('lm-location').value  = s.location;
+  document.getElementById('lm-group').value     = s.group;
+  document.getElementById('lm-submitter').value = s.submitter;
+  document.getElementById('lm-notes').value     = s.notes;
+  _activeMockResult = s._mockResult;
+  setStatus('Scenario loaded: "' + s.company + '" — click Submit Lead to test this flow.', 'info');
+}
+
+// ── Modal open / close
+function openLeadModal() {
+  var root = document.getElementById('lead-modal-root');
+  root.classList.add('open');
+  resetLeadForm();
+  document.addEventListener('keydown', _escHandler);
+  setTimeout(function(){ document.getElementById('lm-company').focus(); }, 300);
+}
+function closeLeadModal() {
+  document.getElementById('lead-modal-root').classList.remove('open');
+  document.removeEventListener('keydown', _escHandler);
+}
+function _escHandler(e) { if (e.key === 'Escape') closeLeadModal(); }
+
+function resetLeadForm() {
+  ['lm-company','lm-location','lm-group','lm-assignto','lm-submitter','lm-notes'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  _activeMockResult = null;
+  setStatus('', '');
+  setLoading(false);
+  document.getElementById('lm-form-body').style.display = '';
+  document.getElementById('lm-footer').style.display = '';
+  document.getElementById('lm-success-screen').classList.remove('show');
+  document.getElementById('mock-panel').style.display = '';
+}
+
+function setStatus(msg, type) {
+  var el = document.getElementById('lm-status');
+  el.textContent = msg;
+  el.className   = 'lm-status-box' + (type ? ' show ' + type : '');
+}
+function setLoading(on) {
+  var btn = document.getElementById('lm-submit-btn');
+  var lbl = document.getElementById('lm-btn-label');
+  var spn = document.getElementById('lm-spinner');
+  btn.disabled     = on;
+  lbl.textContent  = on ? 'Checking…' : 'Submit Lead';
+  spn.style.display = on ? 'inline-block' : 'none';
+}
+
+// ── Submit
+function submitLead() {
+  var company   = document.getElementById('lm-company').value.trim();
+  var location  = document.getElementById('lm-location').value;
+  var group     = document.getElementById('lm-group').value;
+  var submitter = document.getElementById('lm-submitter').value.trim();
+  var assignto  = document.getElementById('lm-assignto').value;
+  var notes     = document.getElementById('lm-notes').value.trim();
+
+  if (!company)   { setStatus('Please enter a company name.', 'err'); return; }
+  if (!location)  { setStatus('Please select a location.', 'err'); return; }
+  if (!group)     { setStatus('Please select a customer type.', 'err'); return; }
+  if (!submitter) { setStatus('Please enter your name.', 'err'); return; }
+  if (!assignto)  { setStatus('Please select who to assign this lead to.', 'err'); return; }
+
+  setLoading(true);
+  setStatus('Creating Asana task…', 'info');
+
+  var taskNotes = [
+    'Company: '       + company,
+    'Location: '      + location,
+    'Customer Type: ' + group,
+    'Submitted by: '  + submitter,
+    'Assigned to: '   + assignto
+  ].join('\n') + (notes ? '\n\nNotes:\n' + notes : '');
+
+  var userEntry     = ASANA_USERS[assignto];
+  var assigneeGid   = Array.isArray(userEntry) ? userEntry[0] : (userEntry || null);
+  var followers     = Array.isArray(userEntry) ? userEntry.slice(1) : [];
+  var submitterGid  = ASANA_SUBMITTERS[submitter];
+  if (submitterGid && submitterGid !== assigneeGid && followers.indexOf(submitterGid) === -1) {
+    followers = followers.concat(submitterGid);
+  }
+
+  var taskData = {
+    name:        'New Lead: ' + company,
+    notes:       taskNotes,
+    memberships: [{ project: ASANA_PROJECT, section: ASANA_SECTION }],
+    assignee:    assigneeGid
+  };
+  if (followers.length) taskData.followers = followers;
+
+  fetch('https://app.asana.com/api/1.0/tasks', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + ASANA_PAT,
+      'Content-Type':  'application/json',
+      'Accept':        'application/json'
+    },
+    body: JSON.stringify({ data: taskData })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(json) {
+    if (json.errors) throw new Error(json.errors[0].message);
+    handleLeadResponse({
+      status:     'created',
+      assignedTo: assignto,
+      asanaTask:  json.data.name,
+      taskUrl:    json.data.permalink_url
+    }, company, assignto);
+  })
+  .catch(function(err) {
+    handleLeadResponse({ status: 'error', message: err.message }, company, assignto);
+  });
+}
+
+function handleLeadResponse(data, company, assignto) {
+  setLoading(false);
+
+  if (data.status === 'exists') {
+    setStatus(
+      '⚠️  "' + (company || 'This company') + '" already exists in ' + data.foundIn +
+      '. No Asana task was created — they\'re already in the system.',
+      'warn'
+    );
+    return;
+  }
+
+  if (data.status === 'created') {
+    // Hide form, show success
+    document.getElementById('lm-form-body').style.display = 'none';
+    document.getElementById('lm-footer').style.display = 'none';
+    document.getElementById('mock-panel').style.display = 'none';
+    document.getElementById('lm-success-msg').innerHTML =
+      '<strong>"' + (company || data.company) + '"</strong> — Asana task created and assigned to <strong>' + (assignto || data.assignedTo) + '</strong>.' +
+      (data.taskUrl ? '<br><br><a href="' + data.taskUrl + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700;">Open task in Asana →</a>' : '');
+    document.getElementById('lm-success-screen').classList.add('show');
+    return;
+  }
+
+  if (data.status === 'error') {
+    setStatus('⚠️  Error: ' + (data.message || 'Unknown error. Please try again.'), 'err');
+    return;
+  }
+
+  setStatus('Unexpected response. Please try again.', 'err');
 }
 </script>
 </body>
