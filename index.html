@@ -273,16 +273,7 @@
   .sidebar.collapsed .sidebar-section{display:none;}
   .sidebar.collapsed .sidebar-bottom{display:none;}
 
-  /* ── SANDBOX BANNER ── */
-  #sandbox-banner{position:fixed;top:0;left:0;right:0;z-index:8888;background:repeating-linear-gradient(
-    -45deg,#f59e0b,#f59e0b 10px,#1a0f00 10px,#1a0f00 20px);
-    padding:6px 0;text-align:center;font-size:11px;font-weight:800;letter-spacing:2px;
-    color:#fff;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.6);
-    box-shadow:0 2px 12px rgba(245,158,11,0.4);}
-  body:has(#sandbox-banner) .main{padding-top:56px !important;}
-  body:has(#sandbox-banner) .sidebar{padding-top:32px;}
-
-  /* ── LEAD BUTTON in sidebar ── */
+/* ── LEAD BUTTON in sidebar ── */
   .lead-nav-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;
     border-radius:8px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.25);
     color:var(--accent);font-family:var(--sans);font-size:12px;cursor:pointer;margin-bottom:2px;
@@ -1977,11 +1968,6 @@ function expandSidebar(){
 </script>
 
 <!-- ═══════════════════════════════════════════════════════
-     SANDBOX BANNER
-════════════════════════════════════════════════════════ -->
-<div id="sandbox-banner">⚠ Sandbox Environment — Lead submissions create real Asana tasks in the Sales project ⚠</div>
-
-<!-- ═══════════════════════════════════════════════════════
      LEAD SUBMISSION MODAL
 ════════════════════════════════════════════════════════ -->
 <div id="lead-modal-root" role="dialog" aria-modal="true" aria-labelledby="lm-title">
@@ -1994,39 +1980,6 @@ function expandSidebar(){
       <h2 id="lm-title">Submit a New Lead</h2>
       <p>We'll check Copper &amp; Fishbowl and route it automatically.</p>
       <button class="lm-close-btn" onclick="closeLeadModal()">✕</button>
-    </div>
-
-    <!-- Mock scenario picker (sandbox only) -->
-    <div class="mock-panel" id="mock-panel">
-      <div class="mock-panel-title">🧪 Sandbox — Pick a test scenario</div>
-      <div class="mock-scenario" onclick="mockFill('new-fleet')">
-        <div class="mock-dot" style="background:#00d4aa"></div>
-        <span><strong>New lead — Fleet</strong> → Creates Asana task, assigns to Zane</span>
-      </div>
-      <div class="mock-scenario" onclick="mockFill('new-diesel-zane')">
-        <div class="mock-dot" style="background:#00d4aa"></div>
-        <span><strong>New lead — Diesel (Zane's turn)</strong> → Round-robin → Zane</span>
-      </div>
-      <div class="mock-scenario" onclick="mockFill('new-diesel-sean')">
-        <div class="mock-dot" style="background:#00d4aa"></div>
-        <span><strong>New lead — Diesel (Sean's turn)</strong> → Round-robin → Sean</span>
-      </div>
-      <div class="mock-scenario" onclick="mockFill('new-other')">
-        <div class="mock-dot" style="background:#00d4aa"></div>
-        <span><strong>New lead — Other</strong> → Creates Asana task, assigns to Sean</span>
-      </div>
-      <div class="mock-scenario" onclick="mockFill('exists-copper')">
-        <div class="mock-dot" style="background:#f59e0b"></div>
-        <span><strong>Already in Copper</strong> → Blocked, no task created</span>
-      </div>
-      <div class="mock-scenario" onclick="mockFill('exists-fishbowl')">
-        <div class="mock-dot" style="background:#f59e0b"></div>
-        <span><strong>Already in Fishbowl</strong> → Blocked, no task created</span>
-      </div>
-      <div class="mock-scenario" onclick="mockFill('error')">
-        <div class="mock-dot" style="background:#f43f5e"></div>
-        <span><strong>Network error</strong> → Error handling flow</span>
-      </div>
     </div>
 
     <!-- Form -->
