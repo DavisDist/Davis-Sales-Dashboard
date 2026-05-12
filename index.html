@@ -2222,29 +2222,34 @@ function setLoading(on) {
   spn.style.display = on ? 'inline-block' : 'none';
 }
 
-// ── Copper duplicate check
+// ── Copper calls — proxied through Apps Script to avoid CORS ──
+function copperJsonp(action, params, onDone) {
+  var driveUrl = cfg.driveUrl || '';
+  if (!driveUrl) { onDone(null); return; }
+  var cb  = 'ddCu_' + Date.now();
+  var src = driveUrl + '?action=' + action + '&callback=' + cb;
+  Object.keys(params).forEach(function(k) { src += '&' + k + '=' + encodeURIComponent(params[k]); });
+  var script = document.createElement('script');
+  var timer = setTimeout(function() {        // 5 s safety timeout
+    delete window[cb];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    onDone(null);
+  }, 5000);
+  window[cb] = function(data) {
+    clearTimeout(timer); delete window[cb];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    onDone(data);
+  };
+  script.src = src;
+  document.head.appendChild(script);
+}
+
 function checkCopper(company, onDone) {
-  var key   = cfg.copperKey   || '';
-  var email = cfg.copperEmail || '';
-  if (!key || !email) { onDone(null); return; }
   setStatus('Checking Copper for duplicates…', 'info');
-  fetch('https://api.copper.com/developer_api/v1/companies/search', {
-    method: 'POST',
-    headers: {
-      'X-PW-AccessToken': key,
-      'X-PW-Application': 'developer_api',
-      'X-PW-UserEmail':   email,
-      'Content-Type':     'application/json',
-      'Accept':           'application/json'
-    },
-    body: JSON.stringify({ name: company, page_size: 5 })
-  })
-  .then(function(res) { return res.json(); })
-  .then(function(data) {
-    if (!Array.isArray(data) || !data.length) { onDone([]); return; }
-    onDone(data.filter(function(c) { return c.name; }));
-  })
-  .catch(function() { onDone([]); });
+  copperJsonp('copper_search', { company: company }, function(data) {
+    if (!data || !Array.isArray(data.companies)) { onDone([]); return; }
+    onDone(data.companies.filter(function(c) { return c.name; }));
+  });
 }
 
 // ── Submit
@@ -2307,28 +2312,12 @@ function createCopperAndAsana(company, location, group, submitter, assignto, not
 }
 
 function createCopperCompany(company, assignto, onDone) {
-  var key   = cfg.copperKey   || '';
-  var email = cfg.copperEmail || '';
-  if (!key || !email) { onDone(); return; }  // Copper not configured — skip silently
-
-  var body = { name: company };
+  var params = { name: company };
   var copperUserId = COPPER_USERS[assignto];
-  if (copperUserId) body.assignee_id = copperUserId;
-
-  fetch('https://api.copper.com/developer_api/v1/companies', {
-    method: 'POST',
-    headers: {
-      'X-PW-AccessToken': key,
-      'X-PW-Application': 'developer_api',
-      'X-PW-UserEmail':   email,
-      'Content-Type':     'application/json',
-      'Accept':           'application/json'
-    },
-    body: JSON.stringify(body)
-  })
-  .then(function(res) { return res.json(); })
-  .then(function(data) { onDone(data); })
-  .catch(function()    { onDone(null); }); // Non-blocking — proceed to Asana even if Copper fails
+  if (copperUserId) params.assignee_id = copperUserId;
+  copperJsonp('copper_create', params, function(data) {
+    onDone(data && data.company ? data.company : null);
+  });
 }
 
 function createAsanaTask(company, location, group, submitter, assignto, notes, copperUrl) {
