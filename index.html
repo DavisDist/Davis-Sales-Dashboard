@@ -2234,7 +2234,7 @@ function copperJsonp(action, params, onDone) {
     delete window[cb];
     if (script.parentNode) script.parentNode.removeChild(script);
     onDone(null);
-  }, 5000);
+  }, 15000);
   window[cb] = function(data) {
     clearTimeout(timer); delete window[cb];
     if (script.parentNode) script.parentNode.removeChild(script);
@@ -2420,7 +2420,7 @@ function handleLeadResponse(data, company, assignto) {
     successHtml += '<br><br>';
     successHtml += data.copperUrl
       ? '✅ Copper company created &nbsp;<a href="' + data.copperUrl + '" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;font-weight:700;">View in Copper →</a>'
-      : '⚠️ Copper not connected — add credentials in Apps Script and redeploy.';
+      : '⚠️ Copper unavailable — company not created in Copper.';
     successHtml += '<br>';
     successHtml += data.taskUrl
       ? '✅ Asana task created &nbsp;<a href="' + data.taskUrl + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700;">Open in Asana →</a>'
