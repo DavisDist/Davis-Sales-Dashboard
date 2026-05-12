@@ -414,6 +414,7 @@
         <div class="sidebar-icon-strip">
           <div class="sb-icon" title="Company Total" onclick="setPage('company');expandSidebar()">&#127962;</div>
           <div class="sb-icon sb-icon-reps" title="Sales Reps">&#128100;</div>
+          <div class="sb-icon" title="Submit Lead" onclick="openLeadModal()" style="font-size:18px;font-weight:700;">&#10010;</div>
           <div class="sb-icon" title="Upload Data" onclick="expandSidebar();setTimeout(()=>togglePanel('upload'),260)">&#128194;</div>
           <div class="sb-icon" title="Settings" onclick="expandSidebar();setTimeout(()=>togglePanel('settings'),260)">&#9881;</div>
           <div class="sb-icon" title="Sign Out" onclick="logout()">&#128682;</div>
@@ -514,6 +515,14 @@
               style="width:100%;padding:5px 7px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:8px;outline:none;margin-bottom:5px;"/>
           </div>
           <div class="settings-group">
+            <div class="settings-group-label">Copper CRM</div>
+            <div style="font-size:9px;color:var(--muted);margin-bottom:7px;line-height:1.5;">API key + your Copper login email — enables duplicate check before submitting leads.</div>
+            <input id="cfg-copper-key" type="password" placeholder="Copper API Key"
+              style="width:100%;padding:5px 7px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:8px;outline:none;margin-bottom:5px;"/>
+            <input id="cfg-copper-email" type="text" placeholder="your@email.com"
+              style="width:100%;padding:5px 7px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:8px;outline:none;margin-bottom:5px;"/>
+          </div>
+          <div class="settings-group">
             <div class="settings-group-label">Working Days Per Quarter</div>
             <div class="settings-row"><div class="settings-row-label">Q1</div><input class="settings-input" id="cfg-wd-q1" type="number" value="63" min="1" max="99"/></div>
             <div class="settings-row"><div class="settings-row-label">Q2</div><input class="settings-input" id="cfg-wd-q2" type="number" value="64" min="1" max="99"/></div>
@@ -551,12 +560,16 @@ function loadCfg(){
   document.getElementById('cfg-wd-q3').value=cfg.wd.Q3;
   document.getElementById('cfg-wd-q4').value=cfg.wd.Q4;
   if(cfg.driveUrl) document.getElementById('cfg-drive-url').value=cfg.driveUrl;
-  if(cfg.asanaPat) document.getElementById('cfg-asana-pat').value=cfg.asanaPat;
+  if(cfg.asanaPat){ document.getElementById('cfg-asana-pat').value=cfg.asanaPat; ASANA_PAT=cfg.asanaPat; }
+  if(cfg.copperKey) document.getElementById('cfg-copper-key').value=cfg.copperKey;
+  if(cfg.copperEmail) document.getElementById('cfg-copper-email').value=cfg.copperEmail;
 }
 function saveSettings(){
   cfg.wd={Q1:parseInt(document.getElementById('cfg-wd-q1').value)||63,Q2:parseInt(document.getElementById('cfg-wd-q2').value)||64,Q3:parseInt(document.getElementById('cfg-wd-q3').value)||63,Q4:parseInt(document.getElementById('cfg-wd-q4').value)||61};
   cfg.driveUrl=(document.getElementById('cfg-drive-url').value||'').trim();
   cfg.asanaPat=(document.getElementById('cfg-asana-pat').value||'').trim();
+  cfg.copperKey=(document.getElementById('cfg-copper-key').value||'').trim();
+  cfg.copperEmail=(document.getElementById('cfg-copper-email').value||'').trim();
   ASANA_PAT=cfg.asanaPat;
   try{ localStorage.setItem('dd_cfg2',JSON.stringify(cfg)); }catch(e){}
   const btn=document.querySelector('.settings-save-btn');
@@ -2076,7 +2089,7 @@ function expandSidebar(){
 ════════════════════════════════════════════════════════ -->
 <script>
 // ── Asana config (PAT stored in browser settings, never in source code)
-var ASANA_PAT     = (function(){ try{ return JSON.parse(localStorage.getItem('dd_cfg')||'{}').asanaPat||''; }catch(e){ return ''; } })();
+var ASANA_PAT     = (function(){ try{ return JSON.parse(localStorage.getItem('dd_cfg2')||'{}').asanaPat||''; }catch(e){ return ''; } })();
 var ASANA_PROJECT = '1201882844321774'; // Sales project
 var ASANA_SECTION = '1214651799941074'; // Sales Leads section
 var ASANA_USERS   = {
@@ -2196,6 +2209,37 @@ function setLoading(on) {
   spn.style.display = on ? 'inline-block' : 'none';
 }
 
+// ── Copper duplicate check
+function checkCopper(company, onDone) {
+  var key   = cfg.copperKey   || '';
+  var email = cfg.copperEmail || '';
+  if (!key || !email) { onDone(null); return; }
+  setStatus('Checking Copper for duplicates…', 'info');
+  fetch('https://api.copper.com/developer_api/v1/companies/search', {
+    method: 'POST',
+    headers: {
+      'X-PW-AccessToken': key,
+      'X-PW-Application': 'developer_api',
+      'X-PW-UserEmail':   email,
+      'Content-Type':     'application/json',
+      'Accept':           'application/json'
+    },
+    body: JSON.stringify({ name: company, page_size: 5 })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (!Array.isArray(data) || !data.length) { onDone(null); return; }
+    var lc = company.trim().toLowerCase();
+    var match = data.find(function(c) {
+      if (!c.name) return false;
+      var cn = c.name.toLowerCase();
+      return cn === lc || cn.indexOf(lc) !== -1 || lc.indexOf(cn) !== -1;
+    });
+    onDone(match || null);
+  })
+  .catch(function() { onDone(null); });
+}
+
 // ── Submit
 function submitLead() {
   var company   = document.getElementById('lm-company').value.trim();
@@ -2212,6 +2256,17 @@ function submitLead() {
   if (!assignto)  { setStatus('Please select who to assign this lead to.', 'err'); return; }
 
   setLoading(true);
+  checkCopper(company, function(existing) {
+    if (existing) {
+      setLoading(false);
+      handleLeadResponse({ status: 'exists', foundIn: 'Copper CRM' }, company, assignto);
+      return;
+    }
+    createAsanaTask(company, location, group, submitter, assignto, notes);
+  });
+}
+
+function createAsanaTask(company, location, group, submitter, assignto, notes) {
   setStatus('Creating Asana task…', 'info');
 
   var taskNotes = [
@@ -2278,7 +2333,7 @@ function handleLeadResponse(data, company, assignto) {
     // Hide form, show success
     document.getElementById('lm-form-body').style.display = 'none';
     document.getElementById('lm-footer').style.display = 'none';
-    document.getElementById('mock-panel').style.display = 'none';
+    var _mp = document.getElementById('mock-panel'); if (_mp) _mp.style.display = 'none';
     document.getElementById('lm-success-msg').innerHTML =
       '<strong>"' + (company || data.company) + '"</strong> — Asana task created and assigned to <strong>' + (assignto || data.assignedTo) + '</strong>.' +
       (data.taskUrl ? '<br><br><a href="' + data.taskUrl + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700;">Open task in Asana →</a>' : '');
