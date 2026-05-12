@@ -318,7 +318,7 @@
   .lm-sel option{background:#0d1623;}
   .lm-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   .lm-status-box{font-size:12px;border-radius:8px;padding:0;max-height:0;overflow:hidden;transition:all .25s;}
-  .lm-status-box.show{max-height:80px;padding:10px 13px;margin-bottom:12px;}
+  .lm-status-box.show{max-height:180px;padding:10px 13px;margin-bottom:12px;}
   .lm-status-box.info{background:rgba(14,165,233,0.1);color:var(--accent2);border:1px solid rgba(14,165,233,0.2);}
   .lm-status-box.warn{background:rgba(245,158,11,0.1);color:var(--warn);border:1px solid rgba(245,158,11,0.2);}
   .lm-status-box.ok{background:rgba(0,212,170,0.1);color:var(--accent);border:1px solid rgba(0,212,170,0.2);}
@@ -1991,7 +1991,7 @@ function expandSidebar(){
     <div class="lm-header">
       <div class="lm-eyebrow">Davis Distributing</div>
       <h2 id="lm-title">Submit a New Lead</h2>
-      <p>We'll check Copper &amp; Fishbowl and route it automatically.</p>
+      <p>Checks Copper for duplicates, creates the company if new, and opens an Asana task.</p>
       <button class="lm-close-btn" onclick="closeLeadModal()">✕</button>
     </div>
 
@@ -2112,6 +2112,19 @@ var ASANA_SUBMITTERS = {
   'Zach Alvey':     '1209875322244753'
 };
 
+// ── Copper user IDs for auto-assigning new companies
+// Get IDs from: Copper > Settings > Integrations > API Keys (shows your own ID)
+// For other reps: POST https://api.copper.com/developer_api/v1/users/search ({"page_size":25})
+var COPPER_USERS = {
+  'Chase Martin':   null,  // fill in Copper user ID
+  'Dan Dalton':     null,
+  'Jake Perry':     null,
+  'Desia Anderson': null,
+  'Ryan Alvey':     null,
+  'Inside Team DD': null,
+  'Inside Team AD': null
+};
+
 // ── Diesel round-robin state (in real version this lives in Apps Script Properties)
 var _dieselTurn = 'zane'; // 'zane' or 'sean'
 
@@ -2192,13 +2205,13 @@ function resetLeadForm() {
   document.getElementById('lm-form-body').style.display = '';
   document.getElementById('lm-footer').style.display = '';
   document.getElementById('lm-success-screen').classList.remove('show');
-  document.getElementById('mock-panel').style.display = '';
+  var _mp = document.getElementById('mock-panel'); if (_mp) _mp.style.display = '';
 }
 
 function setStatus(msg, type) {
   var el = document.getElementById('lm-status');
-  el.textContent = msg;
-  el.className   = 'lm-status-box' + (type ? ' show ' + type : '');
+  el.innerHTML = msg;
+  el.className = 'lm-status-box' + (type ? ' show ' + type : '');
 }
 function setLoading(on) {
   var btn = document.getElementById('lm-submit-btn');
@@ -2259,11 +2272,61 @@ function submitLead() {
   checkCopper(company, function(existing) {
     if (existing) {
       setLoading(false);
-      handleLeadResponse({ status: 'exists', foundIn: 'Copper CRM' }, company, assignto);
+      setStatus(
+        '&#9888; Found in Copper: <strong>&ldquo;' + existing.name + '&rdquo;</strong> &mdash; is this the same company?<br>'
+        + '<button onclick="proceedDespiteDuplicate()" style="margin-top:8px;padding:5px 11px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:6px;color:var(--warn);font-size:11px;cursor:pointer;font-family:var(--sans);font-weight:600;">No &mdash; different company, proceed</button>'
+        + ' <button onclick="setStatus(\'\',\'\')" style="margin-top:8px;margin-left:6px;padding:5px 11px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);">Cancel</button>',
+        'warn'
+      );
       return;
     }
+    setStatus('Creating in Copper &amp; Asana&hellip;', 'info');
+    createCopperAndAsana(company, location, group, submitter, assignto, notes);
+  });
+}
+
+function proceedDespiteDuplicate() {
+  var company   = document.getElementById('lm-company').value.trim();
+  var location  = document.getElementById('lm-location').value;
+  var group     = document.getElementById('lm-group').value;
+  var submitter = document.getElementById('lm-submitter').value.trim();
+  var assignto  = document.getElementById('lm-assignto').value;
+  var notes     = document.getElementById('lm-notes').value.trim();
+  setLoading(true);
+  setStatus('Creating in Copper &amp; Asana&hellip;', 'info');
+  createCopperAndAsana(company, location, group, submitter, assignto, notes);
+}
+
+// ── Create company in Copper then Asana task
+function createCopperAndAsana(company, location, group, submitter, assignto, notes) {
+  createCopperCompany(company, assignto, function() {
     createAsanaTask(company, location, group, submitter, assignto, notes);
   });
+}
+
+function createCopperCompany(company, assignto, onDone) {
+  var key   = cfg.copperKey   || '';
+  var email = cfg.copperEmail || '';
+  if (!key || !email) { onDone(); return; }  // Copper not configured — skip silently
+
+  var body = { name: company };
+  var copperUserId = COPPER_USERS[assignto];
+  if (copperUserId) body.assignee_id = copperUserId;
+
+  fetch('https://api.copper.com/developer_api/v1/companies', {
+    method: 'POST',
+    headers: {
+      'X-PW-AccessToken': key,
+      'X-PW-Application': 'developer_api',
+      'X-PW-UserEmail':   email,
+      'Content-Type':     'application/json',
+      'Accept':           'application/json'
+    },
+    body: JSON.stringify(body)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function() { onDone(); })
+  .catch(function()  { onDone(); }); // Non-blocking — proceed to Asana even if Copper fails
 }
 
 function createAsanaTask(company, location, group, submitter, assignto, notes) {
