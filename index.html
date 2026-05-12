@@ -2298,8 +2298,11 @@ function proceedDespiteDuplicate() {
 
 // ── Create company in Copper then Asana task
 function createCopperAndAsana(company, location, group, submitter, assignto, notes) {
-  createCopperCompany(company, assignto, function() {
-    createAsanaTask(company, location, group, submitter, assignto, notes);
+  createCopperCompany(company, assignto, function(copperData) {
+    var copperUrl = (copperData && copperData.id)
+      ? 'https://app.copper.com/companies/' + copperData.id
+      : null;
+    createAsanaTask(company, location, group, submitter, assignto, notes, copperUrl);
   });
 }
 
@@ -2324,11 +2327,11 @@ function createCopperCompany(company, assignto, onDone) {
     body: JSON.stringify(body)
   })
   .then(function(res) { return res.json(); })
-  .then(function() { onDone(); })
-  .catch(function()  { onDone(); }); // Non-blocking — proceed to Asana even if Copper fails
+  .then(function(data) { onDone(data); })
+  .catch(function()    { onDone(null); }); // Non-blocking — proceed to Asana even if Copper fails
 }
 
-function createAsanaTask(company, location, group, submitter, assignto, notes) {
+function createAsanaTask(company, location, group, submitter, assignto, notes, copperUrl) {
   setStatus('Creating Asana task…', 'info');
 
   var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
@@ -2360,6 +2363,7 @@ function createAsanaTask(company, location, group, submitter, assignto, notes) {
   ].join('\n');
 
   var taskNotes = 'Location: ' + location + '\nCustomer Type: ' + group + '\nSubmitted by: ' + submitter
+    + (copperUrl ? '\nCopper: ' + copperUrl : '')
     + (notes ? '\n\n' + notes : '')
     + '\n\n——————————————\n\n' + TASK_INSTRUCTIONS;
 
