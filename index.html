@@ -2269,13 +2269,8 @@ function submitLead() {
 function createAsanaTask(company, location, group, submitter, assignto, notes) {
   setStatus('Creating Asana task…', 'info');
 
-  var taskNotes = [
-    'Company: '       + company,
-    'Location: '      + location,
-    'Customer Type: ' + group,
-    'Submitted by: '  + submitter,
-    'Assigned to: '   + assignto
-  ].join('\n') + (notes ? '\n\nNotes:\n' + notes : '');
+  var taskNotes = 'Location: ' + location + '\nCustomer Type: ' + group + '\nSubmitted by: ' + submitter
+    + (notes ? '\n\n' + notes : '');
 
   var userEntry     = ASANA_USERS[assignto];
   var assigneeGid   = Array.isArray(userEntry) ? userEntry[0] : (userEntry || null);
@@ -2286,8 +2281,9 @@ function createAsanaTask(company, location, group, submitter, assignto, notes) {
   }
 
   var taskData = {
-    name:        'New Lead: ' + company,
+    name:        company + ' - Sales Lead',
     notes:       taskNotes,
+    projects:    [ASANA_PROJECT],
     memberships: [{ project: ASANA_PROJECT, section: ASANA_SECTION }],
     assignee:    assigneeGid
   };
