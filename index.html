@@ -2390,7 +2390,8 @@ function createAsanaTask(company, location, group, submitter, assignto, notes, c
       status:     'created',
       assignedTo: assignto,
       asanaTask:  json.data.name,
-      taskUrl:    json.data.permalink_url
+      taskUrl:    json.data.permalink_url,
+      copperUrl:  copperUrl || null
     }, company, assignto);
   })
   .catch(function(err) {
@@ -2415,9 +2416,16 @@ function handleLeadResponse(data, company, assignto) {
     document.getElementById('lm-form-body').style.display = 'none';
     document.getElementById('lm-footer').style.display = 'none';
     var _mp = document.getElementById('mock-panel'); if (_mp) _mp.style.display = 'none';
-    document.getElementById('lm-success-msg').innerHTML =
-      '<strong>"' + (company || data.company) + '"</strong> — Asana task created and assigned to <strong>' + (assignto || data.assignedTo) + '</strong>.' +
-      (data.taskUrl ? '<br><br><a href="' + data.taskUrl + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700;">Open task in Asana →</a>' : '');
+    var successHtml = '<strong>"' + (company || data.company) + '"</strong> assigned to <strong>' + (assignto || data.assignedTo) + '</strong>.';
+    successHtml += '<br><br>';
+    successHtml += data.copperUrl
+      ? '✅ Copper company created &nbsp;<a href="' + data.copperUrl + '" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;font-weight:700;">View in Copper →</a>'
+      : '⚠️ Copper not connected — add credentials in Apps Script and redeploy.';
+    successHtml += '<br>';
+    successHtml += data.taskUrl
+      ? '✅ Asana task created &nbsp;<a href="' + data.taskUrl + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700;">Open in Asana →</a>'
+      : '✅ Asana task created.';
+    document.getElementById('lm-success-msg').innerHTML = successHtml;
     document.getElementById('lm-success-screen').classList.add('show');
     return;
   }
