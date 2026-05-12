@@ -2269,8 +2269,37 @@ function submitLead() {
 function createAsanaTask(company, location, group, submitter, assignto, notes) {
   setStatus('Creating Asana task…', 'info');
 
+  var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  var dueDate  = tomorrow.toISOString().split('T')[0];
+
+  var TASK_INSTRUCTIONS = [
+    'Check Fishbowl & Copper CRM — Search for the account by name to confirm:',
+    '',
+    '  • Are they already an existing customer?',
+    '  • Do they have a default salesperson assigned?',
+    '',
+    'If they\'re not in either system, research the company to identify the right contact before reaching out. Target roles like:',
+    '',
+    '  • Fleet Manager',
+    '  • Purchasing Agent / Buyer',
+    '  • Owner or Office Manager',
+    '',
+    'Use any available resources:',
+    '  • LinkedIn',
+    '  • Google (website, news, reviews)',
+    '  • Facebook / social media',
+    '  • Call the company directly and ask',
+    '',
+    '———',
+    '',
+    'Document what you find here in this task — Reach out and get ahold of the correct person. Introduce yourself and Davis Distributing and figure out if there is a time for an outside rep to come visit with them to see where we can assist them.',
+    '',
+    'Build out the company in Copper and assign to the outside rep that has been assigned to go visit them.'
+  ].join('\n');
+
   var taskNotes = 'Location: ' + location + '\nCustomer Type: ' + group + '\nSubmitted by: ' + submitter
-    + (notes ? '\n\n' + notes : '');
+    + (notes ? '\n\n' + notes : '')
+    + '\n\n——————————————\n\n' + TASK_INSTRUCTIONS;
 
   var userEntry     = ASANA_USERS[assignto];
   var assigneeGid   = Array.isArray(userEntry) ? userEntry[0] : (userEntry || null);
@@ -2283,6 +2312,7 @@ function createAsanaTask(company, location, group, submitter, assignto, notes) {
   var taskData = {
     name:        company + ' - Sales Lead',
     notes:       taskNotes,
+    due_on:      dueDate,
     projects:    [ASANA_PROJECT],
     memberships: [{ project: ASANA_PROJECT, section: ASANA_SECTION }],
     assignee:    assigneeGid
