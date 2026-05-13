@@ -2305,7 +2305,7 @@ function proceedDespiteDuplicate() {
 function createCopperAndAsana(company, location, group, submitter, assignto, notes) {
   createCopperCompany(company, assignto, function(copperData) {
     var copperUrl = (copperData && copperData.id)
-      ? 'https://app.copper.com/companies/' + copperData.id
+      ? 'https://app.copper.com/companies/510140/app#/browse/list/companies/default?fullProfile=companies-' + copperData.id
       : null;
     createAsanaTask(company, location, group, submitter, assignto, notes, copperUrl);
   });
