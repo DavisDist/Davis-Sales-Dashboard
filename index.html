@@ -1765,6 +1765,8 @@ function autoFetchFromDrive(silent){
       processCRMCSV(result.data.crmHist.content);
       loaded.push('CRM History');
     }
+    // Pull credentials from server so no per-device setup needed
+    if(result.config && result.config.asanaPat) ASANA_PAT = result.config.asanaPat;
     if(result.data && result.data.goals && result.data.goals.content){
       goals={};
       processGoalsCSV(result.data.goals.content);
