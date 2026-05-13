@@ -865,17 +865,21 @@ async function doLogin(){
   var btn=document.getElementById('login-btn');
   btn.textContent='Signing in…';btn.disabled=true;
   document.getElementById('login-error').textContent='';
+  // After 8s, let users know server may be cold-starting so they don't bail
+  var slowTimer=setTimeout(function(){showLoginError('Still connecting — the server is warming up, hang tight…');},8000);
   var hash=await sha256(pw);
   var cbName='_lcb'+Date.now();
   var url=cfg.driveUrl+(cfg.driveUrl.indexOf('?')>=0?'&':'?')+'action=login&email='+encodeURIComponent(email)+'&hash='+encodeURIComponent(hash)+'&callback='+cbName;
   var s=document.createElement('script');s.src=url;
   var timer=setTimeout(function(){
+    clearTimeout(slowTimer);
     btn.textContent='SIGN IN';btn.disabled=false;
-    showLoginError('Connection timed out. Try again.');
+    showLoginError('Could not reach the server — it may be waking up. Wait a moment and try again.');
     if(s.parentNode)s.parentNode.removeChild(s);
-  },15000);
+  },30000);
   window[cbName]=function(r){
-    clearTimeout(timer);if(s.parentNode)s.parentNode.removeChild(s);window[cbName]=null;
+    clearTimeout(timer);clearTimeout(slowTimer);
+    if(s.parentNode)s.parentNode.removeChild(s);window[cbName]=null;
     btn.textContent='SIGN IN';btn.disabled=false;
     if(r.error||!r.success){showLoginError('Invalid email or password.');return;}
     currentSession={token:r.token,email:r.email,role:r.role,repName:r.repName};
@@ -886,7 +890,8 @@ async function doLogin(){
     init();
   };
   s.onerror=function(){
-    clearTimeout(timer);btn.textContent='SIGN IN';btn.disabled=false;
+    clearTimeout(timer);clearTimeout(slowTimer);
+    btn.textContent='SIGN IN';btn.disabled=false;
     showLoginError('Connection error. Check your network.');
   };
   document.head.appendChild(s);
@@ -1828,17 +1833,23 @@ function autoFetchFromDrive(silent){
   document.querySelectorAll('.dd-jsonp-script').forEach(function(s){ s.parentNode.removeChild(s); });
 
   var cbName='ddCB'+Date.now();
+  // After 8s, show a "warming up" hint so users know to wait
+  var slowSyncTimer=(!silent&&statusEl)?setTimeout(function(){
+    statusEl.textContent='Server waking up, hang tight…';statusEl.style.color='var(--muted)';
+  },8000):null;
 
   var timer=setTimeout(function(){
+    if(slowSyncTimer)clearTimeout(slowSyncTimer);
     window[cbName]=null;
     document.querySelectorAll('.dd-jsonp-script').forEach(function(s){ s.parentNode.removeChild(s); });
     if(!silent && statusEl){
-      statusEl.textContent='Timed out. Check Apps Script deployment.';
-      statusEl.style.color='var(--danger)';
+      statusEl.textContent='Server took too long — refresh to try again.';
+      statusEl.style.color='var(--warn)';
     }
-  }, 15000);
+  }, 30000);
 
   window[cbName]=function(result){
+    if(slowSyncTimer)clearTimeout(slowSyncTimer);
     clearTimeout(timer);
     window[cbName]=null;
     document.querySelectorAll('.dd-jsonp-script').forEach(function(s){ s.parentNode.removeChild(s); });
@@ -1848,6 +1859,7 @@ function autoFetchFromDrive(silent){
         clearSession();
         document.getElementById('app').style.display='none';
         document.getElementById('login-screen').style.display='flex';
+        showLoginError('Your session expired — please sign in again.');
         return;
       }
       if(!silent && statusEl){
