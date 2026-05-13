@@ -1937,35 +1937,53 @@ function processCRMCSV(text){
 }
 
 function processGoalsCSV(text){
+  // null-safe parser: blank/missing cells return null (not 0) so missing goals are hidden
+  function N(v){
+    if(v===undefined||v===null)return null;
+    var s=String(v).trim(); if(s==='')return null;
+    var n=parseFloat(s.replace(/[$,%]/g,'')); return isNaN(n)?null:n;
+  }
+  var goalsDict={}, companyYearlyBlank=false;
   parseCSV(text).forEach(function(row){
-    var repName=(row['rep']||row['name']||'').trim().toLowerCase();
-    if(repName==='company'||repName==='total'||repName==='company total'){
-      var cy=cn(row['yearly_goal']||row['goal']||row['annual_goal']);
-      var cg=cn(row['gp_target']||row['gp%_target']);
-      var cq=cn(row['qtc_target']);
-      var ce=cn(row['existing_pct_goal']);
-      var cnb=cn(row['new_biz_pct_goal']);
-      if(cy) companyGoal.yearly=cy;
-      if(cg) companyGoal.gp=cg;
-      if(cq) companyGoal.qtc=cq;
-      if(ce) companyGoal.existing=ce;
-      if(cnb) companyGoal.newBiz=cnb;
+    var repName=(row['rep']||row['name']||'').trim(); if(!repName)return;
+    var repKey=repName.toLowerCase();
+    var isCompany=repKey==='company'||repKey==='total'||repKey==='company total';
+    // Support both old column names (yearly_goal) and any new variants
+    var yearly=N(row['yearly_goal']||row['yearly_sales_goal']);
+    var gpm  =N(row['gp_goal']   ||row['gp_target']  ||row['gp%_target'])||0;
+    var qtc  =N(row['qtc_goal']  ||row['qtc_target'])||0;
+    var nb   =N(row['new_biz']   ||row['new_biz_pct_goal'])||0;
+    var ex   =N(row['existing_biz']||row['exisiting_biz']||row['existing_pct_goal'])||0;
+    var crm  ={
+      acv_w:N(row['acv_w']||row['acv']),
+      dpv_w:N(row['dpv_w']||row['dpv']),
+      acc_w:N(row['acc_w']||row['acc']),
+      dpc_w:N(row['dpc_w']||row['dpc'])
+    };
+    var ip=N(row['yearly_goal_ip']);
+    if(isCompany){
+      // Update quarterly weights if provided in CSV (values stored as percents, e.g. 20 = 20%)
+      var q1=N(row['q1_pct']),q2=N(row['q2_pct']),q3=N(row['q3_pct']),q4=N(row['q4_pct']);
+      if(q1!==null&&q2!==null&&q3!==null&&q4!==null){
+        Q_WEIGHTS.Q1=q1/100; Q_WEIGHTS.Q2=q2/100; Q_WEIGHTS.Q3=q3/100; Q_WEIGHTS.Q4=q4/100;
+      }
+      companyYearlyBlank=(yearly===null||yearly===0);
+      goalsDict['Company']={yearly:yearly||0,gpm:gpm,qtc:qtc,newBiz:nb,existing:ex,crm:crm,ip_yearly:ip};
       return;
     }
-    if(row['gp_target']||row['gp%_target']){
-      var gv=cn(row['gp_target']||row['gp%_target']);
-      if(gv) gpTarget=gv;
-    }
-    if(row['qtc_target']){ var qv=cn(row['qtc_target']); if(qv) qtcTarget=qv; }
-    if(row['new_biz_pct_goal']){ var nv=cn(row['new_biz_pct_goal']); if(nv) newBizPctGoal=nv; }
-    if(row['existing_pct_goal']){ var ev=cn(row['existing_pct_goal']); if(ev) existingPctGoal=ev; }
-    var idx=matchRep(row['rep']||row['name']); if(idx===-1)return;
-    goals[idx]=cn(row['yearly_goal']||row['goal']||row['annual_goal']);
-    if(row['gp_target']){ var gpr=cn(row['gp_target']); if(gpr) gpTargets[idx]=gpr; }
-    if(row['qtc_target']){ var qpr=cn(row['qtc_target']); if(qpr) qtcTargets[idx]=qpr; }
-    if(row['existing_pct_goal']){ var epr=cn(row['existing_pct_goal']); if(epr) existingPctGoals[idx]=epr; }
-    if(row['new_biz_pct_goal']){ var npr=cn(row['new_biz_pct_goal']); if(npr) newBizPctGoals[idx]=npr; }
+    // Use exact REPS name as key so applyServerGoals() can match correctly
+    var idx=matchRep(repName);
+    var key=idx!==-1?REPS[idx].name:repName;
+    goalsDict[key]={yearly:yearly||0,gpm:gpm,qtc:qtc,newBiz:nb,existing:ex,crm:crm,ip_yearly:ip};
   });
+  // Auto-sum company yearly if the cell was blank
+  if(companyYearlyBlank&&goalsDict['Company']){
+    var sum=0;
+    Object.keys(goalsDict).forEach(function(k){if(k!=='Company')sum+=(goalsDict[k].yearly||0);});
+    goalsDict['Company'].yearly=sum;
+  }
+  // Apply everything to REP_GOALS + companyGoal (same path as server goals)
+  applyServerGoals(goalsDict);
 }
 
 function processCRMGoalsCSV(text){
