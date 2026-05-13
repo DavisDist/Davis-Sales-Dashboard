@@ -2056,10 +2056,23 @@ function expandSidebar(){
         </select>
       </div>
 
-      <!-- Row 5: Notes (full width) -->
+      <!-- Row 5: Notes (required) -->
       <div class="lm-field">
-        <label for="lm-notes">Notes</label>
+        <label for="lm-notes">Notes <span class="req">*</span></label>
         <textarea id="lm-notes" placeholder="Contact info, context, how you heard about them…"></textarea>
+      </div>
+
+      <!-- Row 6: Photo (optional) -->
+      <div class="lm-field">
+        <label>Photo <span style="font-weight:400;color:var(--muted);font-size:10px;">(optional — attached to Asana task)</span></label>
+        <label for="lm-image" id="lm-image-label" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px dashed rgba(255,255,255,0.15);border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.03);color:var(--muted);font-size:12px;">
+          📷 Take photo or choose image
+          <input type="file" id="lm-image" accept="image/*" style="display:none;" onchange="handleImageSelect(this)">
+        </label>
+        <div id="lm-image-preview" style="display:none;margin-top:8px;position:relative;">
+          <img id="lm-image-thumb" style="max-width:100%;max-height:120px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);">
+          <button onclick="clearImage()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.75);border:none;color:white;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px;line-height:22px;text-align:center;">✕</button>
+        </div>
       </div>
 
       <div id="lm-status" class="lm-status-box"></div>
@@ -2121,9 +2134,13 @@ var COPPER_USERS = {
   'Jake Perry':     null,
   'Desia Anderson': null,
   'Ryan Alvey':     null,
+  'Zane Anderson':  null,
+  'Sean Mendenhall':null,
+  'Zach Alvey':     null,
   'Inside Team DD': null,
   'Inside Team AD': null
 };
+var _copperMatches = [];  // holds last Copper search results for match selection
 
 // ── Diesel round-robin state (in real version this lives in Apps Script Properties)
 var _dieselTurn = 'zane'; // 'zane' or 'sean'
@@ -2195,10 +2212,31 @@ function closeLeadModal() {
 }
 function _escHandler(e) { if (e.key === 'Escape') closeLeadModal(); }
 
+function handleImageSelect(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('lm-image-thumb').src = e.target.result;
+    document.getElementById('lm-image-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage() {
+  var inp = document.getElementById('lm-image');
+  if (inp) inp.value = '';
+  var prev = document.getElementById('lm-image-preview');
+  if (prev) prev.style.display = 'none';
+  var thumb = document.getElementById('lm-image-thumb');
+  if (thumb) thumb.src = '';
+}
+
 function resetLeadForm() {
   ['lm-company','lm-location','lm-group','lm-assignto','lm-submitter','lm-notes'].forEach(function(id){
     document.getElementById(id).value = '';
   });
+  clearImage();
   _activeMockResult = null;
   setStatus('', '');
   setLoading(false);
@@ -2264,20 +2302,25 @@ function submitLead() {
   if (!company)   { setStatus('Please enter a company name.', 'err'); return; }
   if (!location)  { setStatus('Please select a location.', 'err'); return; }
   if (!group)     { setStatus('Please select a customer type.', 'err'); return; }
-  if (!submitter) { setStatus('Please enter your name.', 'err'); return; }
+  if (!submitter) { setStatus('Please select your name.', 'err'); return; }
   if (!assignto)  { setStatus('Please select who to assign this lead to.', 'err'); return; }
+  if (!notes)     { setStatus('Please add notes describing this lead.', 'err'); return; }
 
   setLoading(true);
   checkCopper(company, function(matches) {
     if (matches.length) {
       setLoading(false);
-      var listHtml = matches.map(function(c) {
-        return '<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">'
-          + '&bull; ' + c.name + '</div>';
+      _copperMatches = matches;
+      var listHtml = matches.map(function(c, i) {
+        var url = 'https://app.copper.com/companies/510140/app#/browse/list/companies/default?fullProfile=companies-' + c.id;
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);gap:8px;">'
+          + '<a href="' + url + '" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent2);text-decoration:none;font-weight:600;flex:1;">' + c.name + ' →</a>'
+          + '<button onclick="useExistingCopperAccount(' + i + ')" style="flex-shrink:0;padding:3px 8px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:5px;color:var(--accent);font-size:10px;cursor:pointer;font-family:var(--sans);font-weight:600;white-space:nowrap;">Use this account</button>'
+          + '</div>';
       }).join('');
       setStatus(
         '<strong style="font-size:12px;">&#9888; Similar companies found in Copper &mdash; is any of these the same account?</strong>'
-        + '<div style="margin:7px 0 9px;max-height:100px;overflow-y:auto;">' + listHtml + '</div>'
+        + '<div style="margin:7px 0 9px;max-height:120px;overflow-y:auto;">' + listHtml + '</div>'
         + '<button onclick="proceedDespiteDuplicate()" style="padding:5px 11px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:6px;color:var(--warn);font-size:11px;cursor:pointer;font-family:var(--sans);font-weight:600;">None of these &mdash; proceed</button>'
         + ' <button onclick="setStatus(\'\',\'\')" style="margin-left:6px;padding:5px 11px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);">Cancel</button>',
         'warn'
@@ -2285,7 +2328,8 @@ function submitLead() {
       return;
     }
     setStatus('Creating in Copper &amp; Asana&hellip;', 'info');
-    createCopperAndAsana(company, location, group, submitter, assignto, notes);
+    var imageFile = document.getElementById('lm-image').files[0] || null;
+    createCopperAndAsana(company, location, group, submitter, assignto, notes, imageFile);
   });
 }
 
@@ -2296,31 +2340,62 @@ function proceedDespiteDuplicate() {
   var submitter = document.getElementById('lm-submitter').value.trim();
   var assignto  = document.getElementById('lm-assignto').value;
   var notes     = document.getElementById('lm-notes').value.trim();
+  var imageFile = document.getElementById('lm-image').files[0] || null;
   setLoading(true);
   setStatus('Creating in Copper &amp; Asana&hellip;', 'info');
-  createCopperAndAsana(company, location, group, submitter, assignto, notes);
+  createCopperAndAsana(company, location, group, submitter, assignto, notes, imageFile);
 }
 
-// ── Create company in Copper then Asana task
-function createCopperAndAsana(company, location, group, submitter, assignto, notes) {
-  createCopperCompany(company, assignto, function(copperData) {
+// ── Use an existing Copper company — skip creation, just create Asana task
+function useExistingCopperAccount(idx) {
+  var c = _copperMatches[idx];
+  if (!c) return;
+  var copperUrl = 'https://app.copper.com/companies/510140/app#/browse/list/companies/default?fullProfile=companies-' + c.id;
+  var location  = document.getElementById('lm-location').value;
+  var group     = document.getElementById('lm-group').value;
+  var submitter = document.getElementById('lm-submitter').value.trim();
+  var assignto  = document.getElementById('lm-assignto').value;
+  var notes     = document.getElementById('lm-notes').value.trim();
+  var imageFile = document.getElementById('lm-image').files[0] || null;
+  setLoading(true);
+  setStatus('Creating Asana task&hellip;', 'info');
+  createAsanaTask(c.name, location, group, submitter, assignto, notes, copperUrl, imageFile, false);
+}
+
+// ── Create new company in Copper then Asana task
+function createCopperAndAsana(company, location, group, submitter, assignto, notes, imageFile) {
+  createCopperCompany(company, submitter, function(copperData) {
     var copperUrl = (copperData && copperData.id)
       ? 'https://app.copper.com/companies/510140/app#/browse/list/companies/default?fullProfile=companies-' + copperData.id
       : null;
-    createAsanaTask(company, location, group, submitter, assignto, notes, copperUrl);
+    createAsanaTask(company, location, group, submitter, assignto, notes, copperUrl, imageFile, true);
   });
 }
 
-function createCopperCompany(company, assignto, onDone) {
+// Submitter is set as the Copper company owner (person who found the lead)
+function createCopperCompany(company, submitter, onDone) {
   var params = { name: company };
-  var copperUserId = COPPER_USERS[assignto];
+  var copperUserId = COPPER_USERS[submitter];
   if (copperUserId) params.assignee_id = copperUserId;
   copperJsonp('copper_create', params, function(data) {
     onDone(data && data.company ? data.company : null);
   });
 }
 
-function createAsanaTask(company, location, group, submitter, assignto, notes, copperUrl) {
+function attachImageToAsanaTask(taskGid, file, callback) {
+  var formData = new FormData();
+  formData.append('file', file, file.name);
+  fetch('https://app.asana.com/api/1.0/tasks/' + taskGid + '/attachments', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + ASANA_PAT },
+    body: formData
+  })
+  .then(function(r) { return r.json(); })
+  .then(function() { callback(); })
+  .catch(function() { callback(); });
+}
+
+function createAsanaTask(company, location, group, submitter, assignto, notes, copperUrl, imageFile, isNewCopper) {
   setStatus('Creating Asana task…', 'info');
 
   var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
@@ -2386,13 +2461,21 @@ function createAsanaTask(company, location, group, submitter, assignto, notes, c
   .then(function(res) { return res.json(); })
   .then(function(json) {
     if (json.errors) throw new Error(json.errors[0].message);
-    handleLeadResponse({
-      status:     'created',
-      assignedTo: assignto,
-      asanaTask:  json.data.name,
-      taskUrl:    json.data.permalink_url,
-      copperUrl:  copperUrl || null
-    }, company, assignto);
+    var respond = function() {
+      handleLeadResponse({
+        status:        'created',
+        assignedTo:    assignto,
+        asanaTask:     json.data.name,
+        taskUrl:       json.data.permalink_url,
+        copperUrl:     copperUrl || null,
+        copperCreated: isNewCopper !== false
+      }, company, assignto);
+    };
+    if (imageFile && json.data.gid) {
+      attachImageToAsanaTask(json.data.gid, imageFile, respond);
+    } else {
+      respond();
+    }
   })
   .catch(function(err) {
     handleLeadResponse({ status: 'error', message: err.message }, company, assignto);
@@ -2419,7 +2502,8 @@ function handleLeadResponse(data, company, assignto) {
     var successHtml = '<strong>"' + (company || data.company) + '"</strong> assigned to <strong>' + (assignto || data.assignedTo) + '</strong>.';
     successHtml += '<br><br>';
     successHtml += data.copperUrl
-      ? '✅ Copper company created &nbsp;<a href="' + data.copperUrl + '" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;font-weight:700;">View in Copper →</a>'
+      ? (data.copperCreated === false ? '✅ Linked to existing Copper account' : '✅ Copper company created')
+        + ' &nbsp;<a href="' + data.copperUrl + '" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;font-weight:700;">View in Copper →</a>'
       : '⚠️ Copper unavailable — company not created in Copper.';
     successHtml += '<br>';
     successHtml += data.taskUrl
