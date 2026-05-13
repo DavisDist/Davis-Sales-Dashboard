@@ -656,7 +656,8 @@ function applyServerGoals(g){
         Q4:Math.round((r.yearly||0)*(Q_WEIGHTS.Q4||0.24))
       },
       gpm:r.gpm, qtc:r.qtc, existing:r.existing, newBiz:r.newBiz,
-      crm:{acv_w:r.crm.acv_w, dpv_w:r.crm.dpv_w, acc_w:r.crm.acc_w, dpc_w:r.crm.dpc_w}
+      crm:{acv_w:r.crm.acv_w, dpv_w:r.crm.dpv_w, acc_w:r.crm.acc_w, dpc_w:r.crm.dpc_w},
+      ip_yearly: r.ip_yearly || null  // reserved for future IP sales goals
     };
   });
   var co=g['Company'];
