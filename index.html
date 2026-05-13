@@ -643,6 +643,26 @@ const REP_GOALS = {
   },
 };
 
+// ── Apply goals from Google Sheet (overrides hardcoded REP_GOALS on every data refresh)
+function applyServerGoals(g){
+  if(!g||typeof g!=='object') return;
+  REPS.forEach(function(rep,i){
+    var r=g[rep.name]; if(!r) return;
+    REP_GOALS[i]={
+      qGoals:{
+        Q1:Math.round((r.yearly||0)*(Q_WEIGHTS.Q1||0.20)),
+        Q2:Math.round((r.yearly||0)*(Q_WEIGHTS.Q2||0.28)),
+        Q3:Math.round((r.yearly||0)*(Q_WEIGHTS.Q3||0.28)),
+        Q4:Math.round((r.yearly||0)*(Q_WEIGHTS.Q4||0.24))
+      },
+      gpm:r.gpm, qtc:r.qtc, existing:r.existing, newBiz:r.newBiz,
+      crm:{acv_w:r.crm.acv_w, dpv_w:r.crm.dpv_w, acc_w:r.crm.acc_w, dpc_w:r.crm.dpc_w}
+    };
+  });
+  var co=g['Company'];
+  if(co) companyGoal={yearly:co.yearly,gp:co.gpm,qtc:co.qtc,existing:co.existing,newBiz:co.newBiz};
+}
+
 // ══ DATA STORES ══
 let salesRows=[], crmRows=[], ipRows=[], goals={}, crmGoals={};
 let gpTarget=40, qtcTarget=35, newBizPctGoal=30, existingPctGoal=70;
@@ -1395,7 +1415,7 @@ function crmSection(d,idx,pw){
     {label:'Dormant/Prospect Visits',val:isHistorical?d.dpv_p:d.dpv_w, goal:wg.dpv_w, q:d.dpv_q, qg:qg.dpv_q, icon:'&#128682;'},
     {label:'Active Customer Calls',  val:isHistorical?d.acc_p:d.acc_w, goal:wg.acc_w, q:d.acc_q, qg:qg.acc_q, icon:'&#128222;'},
     {label:'Dormant/Prospect Calls', val:isHistorical?d.dpc_p:d.dpc_w, goal:wg.dpc_w, q:d.dpc_q, qg:qg.dpc_q, icon:'&#128242;'},
-  ].filter(m=>m.goal>0);
+  ].filter(m=>m.goal!==null&&m.goal!==undefined&&m.goal>0);
   if(!metrics.length) return '';
   const periodLabel=isHistorical?pw.label:'Weekly';
   const cards=metrics.map(m=>{
@@ -1765,8 +1785,9 @@ function autoFetchFromDrive(silent){
       processCRMCSV(result.data.crmHist.content);
       loaded.push('CRM History');
     }
-    // Pull credentials from server so no per-device setup needed
+    // Pull credentials + goals from server so no per-device setup needed
     if(result.config && result.config.asanaPat) ASANA_PAT = result.config.asanaPat;
+    if(result.config && result.config.goals)    applyServerGoals(result.config.goals);
     if(result.data && result.data.goals && result.data.goals.content){
       goals={};
       processGoalsCSV(result.data.goals.content);
