@@ -845,6 +845,23 @@ function getPeriodWindow(){
   }
 }
 
+// ══ SAMPLE DATA (must be declared before auto-restore calls render/getRepData) ══
+const SAMPLE=[
+  {w:28400,lw:24100,m:121000,q:338800,y:892000,periodSales:892000,gp:38.2,qtc_quotes:47,qtc_orders:16,converted_sales:89200,backorders:84200,existing:641000,newbiz:251000,acv_w:10,dpv_w:6,acc_w:18,dpc_w:12,acv_q:108,dpv_q:64,acc_q:201,dpc_q:124,acv_p:108,dpv_p:64,acc_p:201,dpc_p:124},
+  {w:19800,lw:16400,m:84200, q:235800,y:621000,periodSales:621000,gp:31.5,qtc_quotes:39,qtc_orders:11,converted_sales:62100,backorders:31400,existing:534000,newbiz:87000, acv_w:7, dpv_w:8, acc_w:14,dpc_w:14,acv_q:82, dpv_q:88, acc_q:154,dpc_q:160,acv_p:82, dpv_p:88, acc_p:154,dpc_p:160},
+  {w:36100,lw:31200,m:154800,q:433400,y:1142000,periodSales:1142000,gp:42.1,qtc_quotes:51,qtc_orders:21,converted_sales:141200,backorders:128600,existing:764000,newbiz:378000,acv_w:12,dpv_w:5,acc_w:22,dpc_w:10,acv_q:124,dpv_q:54,acc_q:248,dpc_q:108,acv_p:124,dpv_p:54,acc_p:248,dpc_p:108},
+  {w:16200,lw:13800,m:69400, q:194300,y:512000,periodSales:512000,gp:29.8,qtc_quotes:32,qtc_orders:8, backorders:22800,existing:432000,newbiz:80000, acv_w:5, dpv_w:6, acc_w:11,dpc_w:11,acv_q:64, dpv_q:68, acc_q:124,dpc_q:124,acv_p:64, dpv_p:68, acc_p:124,dpc_p:124,w_ip:9200,lw_ip:7800,m_ip:38000,q_ip:106000,y_ip:280000,periodSales_ip:280000},
+  {w:44200,lw:39800,m:188600,q:527800,y:1388000,periodSales:1388000,gp:45.6,qtc_quotes:56,qtc_orders:27,converted_sales:188600,backorders:214000,existing:912000,newbiz:476000,acv_w:16,dpv_w:9,acc_w:28,dpc_w:16,acv_q:164,dpv_q:92,acc_q:316,dpc_q:176,acv_p:164,dpv_p:92,acc_p:316,dpc_p:176,w_ip:24000,lw_ip:21000,m_ip:98000,q_ip:274000,y_ip:722000,periodSales_ip:722000},
+  {w:22800,lw:19600,m:97200, q:272100,y:718000,periodSales:718000,gp:34.1,qtc_quotes:42,qtc_orders:13,converted_sales:97200,backorders:67400,existing:582000,newbiz:136000,acv_w:9, dpv_w:6, acc_w:17,dpc_w:11,acv_q:102,dpv_q:68,acc_q:192,dpc_q:124,acv_p:102,dpv_p:68,acc_p:192,dpc_p:124},
+  {w:18600,lw:15900,m:79400, q:221800,y:586000,periodSales:586000,gp:36.7,qtc_quotes:38,qtc_orders:13,converted_sales:79400,backorders:44200,existing:468000,newbiz:118000,acv_w:8, dpv_w:5, acc_w:15,dpc_w:10,acv_q:94, dpv_q:58, acc_q:178,dpc_q:112,acv_p:94, dpv_p:58, acc_p:178,dpc_p:112},
+  // Jake Perry (idx 7)
+  {w:14200,lw:11800,m:60400, q:169000,y:446000,periodSales:446000,gp:35.2,qtc_quotes:28,qtc_orders:9, converted_sales:60400,backorders:32100,existing:356000,newbiz:90000, acv_w:2, dpv_w:1, acc_w:5, dpc_w:3, acv_q:24, dpv_q:12, acc_q:56, dpc_q:34, acv_p:24, dpv_p:12, acc_p:56, dpc_p:34},
+  // Zane Anderson (idx 8) — ipOnly; IP sample values only, no regular sales
+  {w:0,lw:0,m:0,q:0,y:0,periodSales:0,gp:0,qtc_quotes:0,qtc_orders:0,converted_sales:0,backorders:0,existing:0,newbiz:0,acv_w:2,dpv_w:1,acc_w:2,dpc_w:1,acv_q:24,dpv_q:12,acc_q:24,dpc_q:12,acv_p:24,dpv_p:12,acc_p:24,dpc_p:12,w_ip:18400,lw_ip:15200,m_ip:74000,q_ip:207000,y_ip:546000,periodSales_ip:546000},
+];
+const IP_ZERO={w_ip:0,lw_ip:0,m_ip:0,q_ip:0,y_ip:0,periodSales_ip:0,m1_ip:0,m2_ip:0,m3_ip:0};
+const IP_SALESPEOPLE = {'zach':4, 'zacha':4, 'sean':3, 'zane':8};
+
 // ══ AUTH ══
 let currentSession = null; // {token, email, role, repName}
 let hiddenReps = new Set(); // rep names to hide from sidebar/cards (still count in company totals)
@@ -1253,22 +1270,6 @@ function aggIPSales(idx){
   return{w_ip,lw_ip,m_ip,q_ip,y_ip,periodSales_ip,m1_ip,m2_ip,m3_ip};
 }
 
-// ══ SAMPLE DATA ══
-const SAMPLE=[
-  {w:28400,lw:24100,m:121000,q:338800,y:892000,periodSales:892000,gp:38.2,qtc_quotes:47,qtc_orders:16,converted_sales:89200,backorders:84200,existing:641000,newbiz:251000,acv_w:10,dpv_w:6,acc_w:18,dpc_w:12,acv_q:108,dpv_q:64,acc_q:201,dpc_q:124,acv_p:108,dpv_p:64,acc_p:201,dpc_p:124},
-  {w:19800,lw:16400,m:84200, q:235800,y:621000,periodSales:621000,gp:31.5,qtc_quotes:39,qtc_orders:11,converted_sales:62100,backorders:31400,existing:534000,newbiz:87000, acv_w:7, dpv_w:8, acc_w:14,dpc_w:14,acv_q:82, dpv_q:88, acc_q:154,dpc_q:160,acv_p:82, dpv_p:88, acc_p:154,dpc_p:160},
-  {w:36100,lw:31200,m:154800,q:433400,y:1142000,periodSales:1142000,gp:42.1,qtc_quotes:51,qtc_orders:21,converted_sales:141200,backorders:128600,existing:764000,newbiz:378000,acv_w:12,dpv_w:5,acc_w:22,dpc_w:10,acv_q:124,dpv_q:54,acc_q:248,dpc_q:108,acv_p:124,dpv_p:54,acc_p:248,dpc_p:108},
-  {w:16200,lw:13800,m:69400, q:194300,y:512000,periodSales:512000,gp:29.8,qtc_quotes:32,qtc_orders:8, backorders:22800,existing:432000,newbiz:80000, acv_w:5, dpv_w:6, acc_w:11,dpc_w:11,acv_q:64, dpv_q:68, acc_q:124,dpc_q:124,acv_p:64, dpv_p:68, acc_p:124,dpc_p:124,w_ip:9200,lw_ip:7800,m_ip:38000,q_ip:106000,y_ip:280000,periodSales_ip:280000},
-  {w:44200,lw:39800,m:188600,q:527800,y:1388000,periodSales:1388000,gp:45.6,qtc_quotes:56,qtc_orders:27,converted_sales:188600,backorders:214000,existing:912000,newbiz:476000,acv_w:16,dpv_w:9,acc_w:28,dpc_w:16,acv_q:164,dpv_q:92,acc_q:316,dpc_q:176,acv_p:164,dpv_p:92,acc_p:316,dpc_p:176,w_ip:24000,lw_ip:21000,m_ip:98000,q_ip:274000,y_ip:722000,periodSales_ip:722000},
-  {w:22800,lw:19600,m:97200, q:272100,y:718000,periodSales:718000,gp:34.1,qtc_quotes:42,qtc_orders:13,converted_sales:97200,backorders:67400,existing:582000,newbiz:136000,acv_w:9, dpv_w:6, acc_w:17,dpc_w:11,acv_q:102,dpv_q:68,acc_q:192,dpc_q:124,acv_p:102,dpv_p:68,acc_p:192,dpc_p:124},
-  {w:18600,lw:15900,m:79400, q:221800,y:586000,periodSales:586000,gp:36.7,qtc_quotes:38,qtc_orders:13,converted_sales:79400,backorders:44200,existing:468000,newbiz:118000,acv_w:8, dpv_w:5, acc_w:15,dpc_w:10,acv_q:94, dpv_q:58, acc_q:178,dpc_q:112,acv_p:94, dpv_p:58, acc_p:178,dpc_p:112},
-  // Jake Perry (idx 7)
-  {w:14200,lw:11800,m:60400, q:169000,y:446000,periodSales:446000,gp:35.2,qtc_quotes:28,qtc_orders:9, converted_sales:60400,backorders:32100,existing:356000,newbiz:90000, acv_w:2, dpv_w:1, acc_w:5, dpc_w:3, acv_q:24, dpv_q:12, acc_q:56, dpc_q:34, acv_p:24, dpv_p:12, acc_p:56, dpc_p:34},
-  // Zane Anderson (idx 8) — ipOnly; IP sample values only, no regular sales
-  {w:0,lw:0,m:0,q:0,y:0,periodSales:0,gp:0,qtc_quotes:0,qtc_orders:0,converted_sales:0,backorders:0,existing:0,newbiz:0,acv_w:2,dpv_w:1,acc_w:2,dpc_w:1,acv_q:24,dpv_q:12,acc_q:24,dpc_q:12,acv_p:24,dpv_p:12,acc_p:24,dpc_p:12,w_ip:18400,lw_ip:15200,m_ip:74000,q_ip:207000,y_ip:546000,periodSales_ip:546000},
-];
-
-const IP_ZERO={w_ip:0,lw_ip:0,m_ip:0,q_ip:0,y_ip:0,periodSales_ip:0,m1_ip:0,m2_ip:0,m3_ip:0};
 function getRepData(idx){
   const ls=aggSales(idx),lc=aggCRM(idx),li=aggIPSales(idx);
   if(hasLiveData){
@@ -1953,7 +1954,6 @@ function autoFetchFromDrive(silent){
 
 // ── CSV processors ──
 // Maps first name (lowercase) in the Salesperson column → REPS index for IP tracking
-const IP_SALESPEOPLE = {'zach':4, 'zacha':4, 'sean':3, 'zane':8};
 
 function processSalesCSV(text){
   parseCSV(text).forEach(function(row){
