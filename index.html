@@ -1920,6 +1920,11 @@ function autoFetchFromDrive(silent){
       processIPSalesCSV(result.data.ip_sales.content);
       loaded.push('IP Sales ('+result.data.ip_sales.lastModified.slice(0,10)+')');
     }
+    // Merge today's IP on top of historical — upserts by rep+date, no clear needed
+    if(result.data && result.data.ip_today && result.data.ip_today.content){
+      processIPSalesCSV(result.data.ip_today.content);
+      loaded.push('IP Today');
+    }
 
     if(loaded.length>0){
       hasLiveData=true;
