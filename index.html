@@ -687,8 +687,10 @@ function applyServerGoals(g){
       },
       gpm:r.gpm, qtc:r.qtc, existing:r.existing, newBiz:r.newBiz,
       crm:{acv_w:r.crm.acv_w, dpv_w:r.crm.dpv_w, acc_w:r.crm.acc_w, dpc_w:r.crm.dpc_w},
-      ip_yearly: r.ip_yearly || null  // reserved for future IP sales goals
+      ip_yearly: r.ip_yearly || null
     };
+    // Server-provided weekly CRM goals take priority over any old uploaded CRM-goals CSV in localStorage
+    if(r.crm && (r.crm.acv_w !== null || r.crm.acc_w !== null)) delete crmGoals[i];
   });
   var co=g['Company'];
   if(co) companyGoal={yearly:co.yearly,gp:co.gpm,qtc:co.qtc,existing:co.existing,newBiz:co.newBiz};
@@ -2289,7 +2291,7 @@ function expandSidebar(){
       <!-- Row 1: Company Name (full width) -->
       <div class="lm-field">
         <label for="lm-company">Company Name <span class="req">*</span></label>
-        <input id="lm-company" type="text" placeholder="e.g. Wasatch Diesel LLC" autocomplete="off"/>
+        <input id="lm-company" type="text" placeholder="e.g. WASATCH DIESEL LLC" autocomplete="off" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase"/>
       </div>
 
       <!-- Row 2: Location + Customer Type -->
@@ -2417,7 +2419,7 @@ var ASANA_SUBMITTERS = {
 // Get IDs from: Copper > Settings > Integrations > API Keys (shows your own ID)
 // For other reps: POST https://api.copper.com/developer_api/v1/users/search ({"page_size":25})
 var COPPER_USERS = {
-  'Chase Martin':   null,  // fill in Copper user ID
+  'Chase Martin':   null,
   'Dan Dalton':     null,
   'Jake Perry':     null,
   'Desia Anderson': null,
@@ -2428,7 +2430,35 @@ var COPPER_USERS = {
   'Inside Team DD': null,
   'Inside Team AD': null
 };
-var _copperMatches = [];  // holds last Copper search results for match selection
+var _copperMatches   = [];   // holds last Copper search results
+var _acctOwnerFieldId = null; // Copper custom field definition ID for "Account Owner"
+
+// Fetch Copper users + custom field defs once per session so we can:
+//   1. Auto-assign the submitter as company owner when creating in Copper
+//   2. Show "Account Owner" from custom fields in the duplicate-check list
+function loadCopperMeta() {
+  if (loadCopperMeta._done) return;
+  loadCopperMeta._done = true;
+  // Fetch users
+  copperJsonp('copper_users', {}, function(data) {
+    if (!data || !Array.isArray(data.users)) return;
+    data.users.forEach(function(u) {
+      var n = (u.name || '').trim();
+      Object.keys(COPPER_USERS).forEach(function(repName) {
+        if (n.toLowerCase() === repName.toLowerCase()) COPPER_USERS[repName] = u.id;
+      });
+    });
+  });
+  // Fetch custom field definitions — find the "Account Owner" field
+  copperJsonp('copper_field_defs', {}, function(data) {
+    if (!data || !Array.isArray(data.fields)) return;
+    data.fields.forEach(function(f) {
+      if ((f.name || '').toLowerCase().indexOf('account owner') !== -1) {
+        _acctOwnerFieldId = f.id;
+      }
+    });
+  });
+}
 
 // ── Diesel round-robin state (in real version this lives in Apps Script Properties)
 var _dieselTurn = 'zane'; // 'zane' or 'sean'
@@ -2491,6 +2521,7 @@ function openLeadModal() {
   var root = document.getElementById('lead-modal-root');
   root.classList.add('open');
   resetLeadForm();
+  loadCopperMeta(); // pre-load Copper user IDs + field defs in background
   document.addEventListener('keydown', _escHandler);
   setTimeout(function(){ document.getElementById('lm-company').focus(); }, 300);
 }
@@ -2601,11 +2632,32 @@ function submitLead() {
       _copperMatches = matches;
       var listHtml = matches.map(function(c, i) {
         var url = 'https://app.copper.com/companies/510140/app#/browse/list/companies/default?fullProfile=companies-' + c.id;
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);gap:8px;">'
-          + '<a href="' + url + '" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent2);text-decoration:none;font-weight:600;flex:1;">' + c.name + ' →</a>'
+        return '<div id="cm-row-' + i + '" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);gap:8px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:0;">'
+          + '<a href="' + url + '" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent2);text-decoration:none;font-weight:600;">' + c.name + ' →</a>'
+          + '<span id="cm-owner-' + i + '" style="display:block;font-size:10px;color:var(--muted);font-style:italic;"></span>'
+          + '</div>'
           + '<button onclick="useExistingCopperAccount(' + i + ')" style="flex-shrink:0;padding:3px 8px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:5px;color:var(--accent);font-size:10px;cursor:pointer;font-family:var(--sans);font-weight:600;white-space:nowrap;">Use this account</button>'
           + '</div>';
       }).join('');
+      // Fetch Account Owner for each match in background
+      matches.forEach(function(c, i) {
+        copperJsonp('copper_co_detail', {id: c.id}, function(data) {
+          var el = document.getElementById('cm-owner-' + i);
+          if (!el) return;
+          var co = data && data.company;
+          if (!co) return;
+          var ownerVal = null;
+          // Try custom field "Account Owner" by known definition ID
+          if (_acctOwnerFieldId && Array.isArray(co.custom_fields)) {
+            var cf = co.custom_fields.find(function(f){ return f.custom_field_definition_id === _acctOwnerFieldId; });
+            if (cf && cf.value) ownerVal = cf.value;
+          }
+          // Fallback: show assignee name from the company's assignee object
+          if (!ownerVal && co.assignee_id) ownerVal = 'Owner ID: ' + co.assignee_id;
+          if (ownerVal) el.textContent = 'Account Owner: ' + ownerVal;
+        });
+      });
       setStatus(
         '<strong style="font-size:12px;">&#9888; Similar companies found in Copper &mdash; is any of these the same account?</strong>'
         + '<div style="margin:7px 0 9px;max-height:120px;overflow-y:auto;">' + listHtml + '</div>'
@@ -2689,35 +2741,37 @@ function createAsanaTask(company, location, group, submitter, assignto, notes, c
   var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
   var dueDate  = tomorrow.toISOString().split('T')[0];
 
-  var TASK_INSTRUCTIONS = [
-    'Check Fishbowl & Copper CRM — Search for the account by name to confirm:',
-    '',
-    '  • Are they already an existing customer?',
-    '  • Do they have a default salesperson assigned?',
-    '',
-    'If they\'re not in either system, research the company to identify the right contact before reaching out. Target roles like:',
-    '',
-    '  • Fleet Manager',
-    '  • Purchasing Agent / Buyer',
-    '  • Owner or Office Manager',
-    '',
-    'Use any available resources:',
-    '  • LinkedIn',
-    '  • Google (website, news, reviews)',
-    '  • Facebook / social media',
-    '  • Call the company directly and ask',
-    '',
-    '———',
-    '',
-    'Document what you find here in this task — Reach out and get ahold of the correct person. Introduce yourself and Davis Distributing and figure out if there is a time for an outside rep to come visit with them to see where we can assist them.',
-    '',
-    'Build out the company in Copper and assign to the outside rep that has been assigned to go visit them.'
-  ].join('\n');
-
-  var taskNotes = 'Location: ' + location + '\nCustomer Type: ' + group + '\nSubmitted by: ' + submitter
+  var baseNotes = 'Location: ' + location + '\nCustomer Type: ' + group + '\nSubmitted by: ' + submitter
     + (copperUrl ? '\nCopper: ' + copperUrl : '')
-    + (notes ? '\n\n' + notes : '')
-    + '\n\n——————————————\n\n' + TASK_INSTRUCTIONS;
+    + (notes ? '\n\n' + notes : '');
+
+  var taskName, taskNotes;
+  if (!isNewCopper) {
+    // Existing Copper account — follow-up task
+    taskName  = company + ' – Sales Follow Up';
+    taskNotes = baseNotes;
+  } else {
+    // New company not in Copper — sales lead with full investigation instructions
+    taskName  = company + ' – Sales Lead';
+    taskNotes = baseNotes + '\n\n——————————————\n\n'
+      + 'Search for the account by name in Fishbowl:\n'
+      + '  • Are they already an existing customer?\n'
+      + '  • Do they have a default salesperson assigned?\n\n'
+      + 'If so, please assign task to default salesperson. If it’s a house account please update Copper with company information.\n\n'
+      + 'Research the company to identify the right contact before reaching out. Target roles like:\n'
+      + '  • Fleet Manager\n'
+      + '  • Purchasing Agent / Buyer\n'
+      + '  • Owner or Office Manager or Shop Manager\n\n'
+      + '**Who is purchasing equipment for vehicles, etc.\n\n'
+      + 'Use any available resources:\n'
+      + '  • LinkedIn\n'
+      + '  • Google (website, news, reviews)\n'
+      + '  • Facebook / social media\n'
+      + '  • Call the company directly and ask\n\n'
+      + '———\n\n'
+      + 'Document what you find here in this task — Reach out and get ahold of the correct person. Introduce yourself and Davis Distributing and figure out if there is a time for an outside rep to come visit with them to see where we can assist them.\n\n'
+      + 'Finish building the customer in Copper and assign to the outside rep that has been assigned to go visit them. Add Company address and primary contact information.';
+  }
 
   var userEntry     = ASANA_USERS[assignto];
   var assigneeGid   = Array.isArray(userEntry) ? userEntry[0] : (userEntry || null);
@@ -2728,7 +2782,7 @@ function createAsanaTask(company, location, group, submitter, assignto, notes, c
   }
 
   var taskData = {
-    name:        company + ' - Sales Lead',
+    name:        taskName,
     notes:       taskNotes,
     due_on:      dueDate,
     projects:    [ASANA_PROJECT],
