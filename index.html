@@ -2653,13 +2653,23 @@ function submitLead() {
           var co = data && data.company;
           if (!co) return;
           var ownerVal = null;
+          // Reverse-lookup: Copper stores numeric user IDs, map back to name via COPPER_USERS
+          function resolveUserName(id) {
+            if (!id) return null;
+            var numId = parseInt(id, 10);
+            var keys = Object.keys(COPPER_USERS);
+            for (var k = 0; k < keys.length; k++) {
+              if (COPPER_USERS[keys[k]] === numId) return keys[k];
+            }
+            return null;
+          }
           // Try custom field "Account Owner" by known definition ID
           if (_acctOwnerFieldId && Array.isArray(co.custom_fields)) {
             var cf = co.custom_fields.find(function(f){ return f.custom_field_definition_id === _acctOwnerFieldId; });
-            if (cf && cf.value) ownerVal = cf.value;
+            if (cf && cf.value) ownerVal = resolveUserName(cf.value) || String(cf.value);
           }
-          // Fallback: show assignee name from the company's assignee object
-          if (!ownerVal && co.assignee_id) ownerVal = 'Owner ID: ' + co.assignee_id;
+          // Fallback: assignee on the company record
+          if (!ownerVal && co.assignee_id) ownerVal = resolveUserName(co.assignee_id) || ('ID: ' + co.assignee_id);
           if (ownerVal) el.textContent = 'Account Owner: ' + ownerVal;
         });
       });
