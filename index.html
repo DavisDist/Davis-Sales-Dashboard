@@ -2631,7 +2631,8 @@ function copperJsonp(action, params, onDone) {
 function checkCopper(company, onDone) {
   setStatus('Checking Copper for duplicates…', 'info');
   copperJsonp('copper_search', { company: company }, function(data) {
-    if (!data || !Array.isArray(data.companies)) { onDone([]); return; }
+    if (!data) { onDone(null); return; }                          // network failure / not connected
+    if (!Array.isArray(data.companies)) { onDone([]); return; }  // connected but empty response
     onDone(data.companies.filter(function(c) { return c.name; }));
   });
 }
@@ -2654,6 +2655,11 @@ function submitLead() {
 
   setLoading(true);
   checkCopper(company, function(matches) {
+    if (matches === null) {
+      setLoading(false);
+      setStatus('&#9888; Could not reach Copper — make sure the dashboard is connected and try again.', 'err');
+      return;
+    }
     if (matches.length) {
       setLoading(false);
       _copperMatches = matches;
