@@ -697,7 +697,7 @@ function applyServerGoals(g){
 }
 
 // ══ DATA STORES ══
-let salesRows=[], crmRows=[], ipRows=[], goals={}, crmGoals={};
+let salesRows=[], crmRows=[], ipRows=[], goals={}, crmGoals={}, ipRepMetrics={};
 let gpTarget=40, qtcTarget=35, newBizPctGoal=30, existingPctGoal=70;
 let gpTargets={}, qtcTargets={}, existingPctGoals={}, newBizPctGoals={};
 let companyGoal={yearly:9600000, gp:27.5, qtc:64, existing:80, newBiz:20};
@@ -1255,6 +1255,7 @@ function aggIPSales(idx){
   const pwQ=pw.qtr?parseInt(pw.qtr.replace('Q','')):(curQ);
   const pwQStartMonth=(pwQ-1)*3;
   let w_ip=0,lw_ip=0,m_ip=0,q_ip=0,y_ip=0,periodSales_ip=0,m1_ip=0,m2_ip=0,m3_ip=0;
+  let gpNum=0,gpDen=0;
   rows.forEach(row=>{
     const rw=getWeekStart(row.date).getTime(),rm=row.date.getMonth(),ry=row.date.getFullYear(),rq=getQtr(row.date);
     if(ry===curY) y_ip+=row.sales;
@@ -1268,8 +1269,11 @@ function aggIPSales(idx){
       if(rm===pwQStartMonth+1) m2_ip+=row.sales;
       if(rm===pwQStartMonth+2) m3_ip+=row.sales;
     }
+    // Weighted-average GP% across all YTD IP rows
+    if(ry===curY&&row.sales>0){gpNum+=(row.gp/100)*row.sales;gpDen+=row.sales;}
   });
-  return{w_ip,lw_ip,m_ip,q_ip,y_ip,periodSales_ip,m1_ip,m2_ip,m3_ip};
+  const gp_ip=gpDen>0?parseFloat(((gpNum/gpDen)*100).toFixed(1)):0;
+  return{w_ip,lw_ip,m_ip,q_ip,y_ip,periodSales_ip,m1_ip,m2_ip,m3_ip,gp_ip};
 }
 
 function getRepData(idx){
@@ -1278,7 +1282,21 @@ function getRepData(idx){
     const crmData=lc||{acv_w:0,dpv_w:0,acc_w:0,dpc_w:0,acv_q:0,dpv_q:0,acc_q:0,dpc_q:0,acv_p:0,dpv_p:0,acc_p:0,dpc_p:0};
     const salesData=ls||{w:0,lw:0,m:0,q:0,y:0,gp:0,periodSales:0,qtc_quotes:0,qtc_orders:0,backorders:0,existing:0,newbiz:0,converted_sales:0};
     const ipData=li||IP_ZERO;
-    return{...salesData,...crmData,...ipData};
+    let merged={...salesData,...crmData,...ipData};
+    // For IP-only reps, overlay QTC/backorders/existing/new from alias rep and GP from IP rows
+    if(REPS[idx]&&REPS[idx].ipOnly){
+      const alias=ipRepMetrics[REPS[idx].name];
+      if(alias){
+        merged.qtc_quotes     =parseFloat(alias.quotes)||0;
+        merged.qtc_orders     =parseFloat(alias.orders)||0;
+        merged.backorders     =parseFloat(alias.backorders)||0;
+        merged.existing       =parseFloat(alias.existing)||0;
+        merged.newbiz         =parseFloat(alias.new_biz)||0;
+        merged.converted_sales=parseFloat(alias.converted_sales)||0;
+      }
+      if(li&&li.gp_ip) merged.gp=li.gp_ip;
+    }
+    return merged;
   }
   const s=SAMPLE[idx]||{...SAMPLE[0]};
   return{...IP_ZERO,...s,...(ls||{}),...(lc||{}),...(li||{})};
@@ -1924,6 +1942,10 @@ function autoFetchFromDrive(silent){
     if(result.data && result.data.ip_today && result.data.ip_today.content){
       processIPSalesCSV(result.data.ip_today.content);
       loaded.push('IP Today');
+    }
+    // Supplemental metrics for IP reps (QTC, backorders, existing/new from alias rep)
+    if(result.data && result.data.ip_rep_metrics){
+      ipRepMetrics=result.data.ip_rep_metrics;
     }
 
     if(loaded.length>0){
